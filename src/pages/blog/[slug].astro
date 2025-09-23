@@ -1,26 +1,8 @@
----
 import Layout from '@/layouts/Layout.astro';
 import Navbar from '@/components/Navbar.astro';
 
-// Generamos rutas estáticas para los posts disponibles al momento del build.
-// Si la API no responde, retornamos una lista vacía para no romper el build.
-export async function getStaticPaths() {
-  const apiBase = process.env.PUBLIC_API_URL || 'http://localhost:8000';
-  try {
-    const res = await fetch(`${apiBase}/posts?limit=200`);
-    if (!res.ok) throw new Error('Posts fetch failed');
-    const posts = await res.json();
-    // Suponemos que cada post tiene un campo slug; si no, lo filtramos.
-    const paths = (Array.isArray(posts) ? posts : [])
-      .filter(p => p && p.slug)
-      .map(p => ({ params: { slug: p.slug } }));
-    return paths;
-  } catch (e) {
-    console.warn('[getStaticPaths blog] Error obteniendo posts:', e.message);
-    return [];
-  }
-}
----
+// Modo SSR híbrido: no prerenderizamos esta ruta; se resuelve dinámicamente en runtime.
+export const prerender = false;
 
 <Layout title="Post - Blog - TecnoJuy">
   <Navbar />
