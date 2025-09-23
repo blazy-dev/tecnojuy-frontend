@@ -2,7 +2,22 @@
 import Layout from '@/layouts/Layout.astro';
 import Navbar from '@/components/Navbar.astro';
 
-export const prerender = false;
+// Generar rutas estáticas de cursos (ids). Si falla la API, seguimos con 0 rutas.
+export async function getStaticPaths() {
+  const apiBase = process.env.PUBLIC_API_URL || 'http://localhost:8000';
+  try {
+    const res = await fetch(`${apiBase}/courses/?limit=200`);
+    if (!res.ok) throw new Error('Courses fetch failed');
+    const courses = await res.json();
+    const paths = (Array.isArray(courses) ? courses : [])
+      .filter(c => c && typeof c.id === 'number')
+      .map(c => ({ params: { id: String(c.id) } }));
+    return paths;
+  } catch (e) {
+    console.warn('[getStaticPaths cursos] Error obteniendo cursos:', e.message);
+    return [];
+  }
+}
 ---
 
 <Layout title="Curso - TecnoJuy">
