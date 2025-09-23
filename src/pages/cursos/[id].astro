@@ -1,8 +1,10 @@
+---
 import Layout from '@/layouts/Layout.astro';
 import Navbar from '@/components/Navbar.astro';
 
 // Ruta dinámica servida vía SSR (adapter cloudflare). No prerender.
 export const prerender = false;
+---
 
 <Layout title="Curso - TecnoJuy">
   <Navbar />

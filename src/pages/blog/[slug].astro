@@ -1,8 +1,10 @@
+---
 import Layout from '@/layouts/Layout.astro';
 import Navbar from '@/components/Navbar.astro';
 
 // Modo SSR híbrido: no prerenderizamos esta ruta; se resuelve dinámicamente en runtime.
 export const prerender = false;
+---
 
 <Layout title="Post - Blog - TecnoJuy">
   <Navbar />
