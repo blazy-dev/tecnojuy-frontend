@@ -1,4 +1,3 @@
-import Cookies from 'js-cookie';
 import { config, getApiUrl } from './config';
 import type { User, Post, PostSummary, PostCreate, PostUpdate, Role, AuthUser, UploadUrlResponse } from '@/types';
 
