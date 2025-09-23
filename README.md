@@ -27,3 +27,6 @@ La variable `PUBLIC_API_URL` puede ir en `.env` local si deseas apuntar a otra A
 ## Notas
 - En producción, el frontend llama a la API usando `PUBLIC_API_URL` (ver `astro.config.mjs` y `src/lib/config.ts`).
 - Asegúrate de que el backend permita CORS desde tu dominio de Pages (`FRONTEND_URL`).
+
+## Deploy trigger
+Esta línea existe solo para forzar un nuevo build en Cloudflare Pages (actualización de backend / redirect fix).
