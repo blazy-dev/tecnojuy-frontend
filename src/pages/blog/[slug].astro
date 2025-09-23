@@ -1,0 +1,358 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Navbar from '@/components/Navbar.astro';
+
+export const prerender = false;
+---
+
+<Layout title="Post - Blog - TecnoJuy">
+  <Navbar />
+  <main>
+  <div id="post-container" class="min-h-screen bg-brand-primary">
+      <!-- Loading -->
+      <div id="loading" class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2" style="border-color: var(--text-accent);"></div>
+        <span class="ml-3" style="color: var(--text-secondary);">Cargando post...</span>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const loadingEl = document.getElementById('loading');
+    const containerEl = document.getElementById('post-container');
+    
+    // Obtener el slug de la URL
+    const pathParts = window.location.pathname.split('/');
+    const slug = pathParts[pathParts.length - 1];
+
+    try {
+      // Cargar el post
+      const response = await fetch(`/api/blog/posts/${slug}`);
+      if (!response.ok) {
+        throw new Error(response.status === 404 ? 'Post no encontrado' : 'Error cargando post');
+      }
+      
+      const post = await response.json();
+
+      // Ocultar loading
+      if (loadingEl) loadingEl.style.display = 'none';
+      
+      // Actualizar el título de la página
+      document.title = `${post.title} - Blog - TecnoJuy`;
+      
+      // Render del post
+      containerEl.innerHTML = `
+        <!-- Hero Section -->
+        <article class="bg-brand-primary">
+          ${post.featured_image_url ? `
+            <div class="relative h-64 md:h-96 bg-brand-tertiary overflow-hidden">
+              <img src="${post.featured_image_url}" alt="${post.title}" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+              <!-- Breadcrumb overlay at bottom of image -->
+              <div class="absolute inset-x-0 bottom-0">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                  <nav class="breadcrumb-hero" style="color:#ffffff !important;">
+                    <ol class="flex items-center space-x-2 text-sm" style="color:#ffffff !important;">
+                      <li><a href="/" class="font-medium" style="color:#ffffff !important; text-shadow:0 1px 1px rgba(0,0,0,0.35)">Inicio</a></li>
+                      <li class="sep" style="color:rgba(255,255,255,0.85) !important; text-shadow:0 1px 1px rgba(0,0,0,0.2)">/</li>
+                      <li><a href="/blog" class="font-medium" style="color:#ffffff !important; text-shadow:0 1px 1px rgba(0,0,0,0.35)">Blog</a></li>
+                      <li class="sep" style="color:rgba(255,255,255,0.85) !important; text-shadow:0 1px 1px rgba(0,0,0,0.2)">/</li>
+                      <li class="font-medium current" style="color:#ffffff !important; text-shadow:0 1px 1px rgba(0,0,0,0.35)">${post.title}</li>
+                    </ol>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+          
+          <!-- Post Header -->
+          <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="pt-6 pb-3 ${post.featured_image_url ? '' : ''}">
+
+              <!-- Category -->
+              ${post.category ? `
+                <div class="mb-2">
+                  <span class="inline-block px-3 py-1 text-sm font-semibold text-white rounded-full" style="background-color: ${post.category.color}">
+                    ${post.category.name}
+                  </span>
+                </div>
+              ` : ''}
+
+              <!-- Title -->
+              <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-6" style="color: var(--text-primary);">
+                ${post.title}
+              </h1>
+
+              <!-- Post Meta -->
+              <div class="flex flex-wrap items-center gap-6 text-sm mb-8" style="color: var(--text-secondary);">
+                <div class="flex items-center space-x-2">
+                  <img 
+                    src="${post.author.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.name)}&background=3b82f6&color=ffffff`}" 
+                    alt="${post.author.name}" 
+                    class="w-8 h-8 rounded-full"
+                  >
+                  <span class="font-medium" style="color: var(--text-primary);">${post.author.name}</span>
+                </div>
+                
+                <span class="font-medium">📅 ${new Date(post.published_at || post.created_at).toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long', 
+                  day: 'numeric'
+                })}</span>
+                
+                ${post.reading_time_minutes ? `<span class=\"font-medium\">⏱️ ${post.reading_time_minutes} min de lectura</span>` : ''}
+                <span class="font-medium">👁️ ${post.views_count} vistas</span>
+                
+                ${post.is_featured ? `<span class="font-semibold" style="color: var(--text-accent);">⭐ Destacado</span>` : ''}
+              </div>
+
+              <!-- Excerpt -->
+              ${post.excerpt ? `
+                <div class="text-lg mb-4 font-medium" style="color: var(--text-secondary);">
+                  ${post.excerpt}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </article>
+
+        <!-- Post Content -->
+        <div class="bg-brand-primary">
+          <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-8">
+            <div class="prose prose-lg max-w-none">
+              ${formatContent(post.content)}
+            </div>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        ${post.tags && post.tags.length > 0 ? `
+          <div class="border-t" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <h3 class="text-sm font-medium mb-3" style="color: var(--text-primary);">Tags:</h3>
+              <div class="flex flex-wrap gap-2">
+                ${post.tags.map(tag => `
+                  <span class="inline-block px-3 py-1 text-sm rounded-full transition-colors cursor-pointer" style="color: var(--text-accent); border: 1px solid var(--text-accent); background-color: transparent;">
+                    #${tag.name}
+                  </span>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Share Section -->
+        <div class="border-t" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+          <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-medium" style="color: var(--text-primary);">¿Te gustó este post?</h3>
+              <div class="flex items-center space-x-4">
+                <button onclick="sharePost()" class="btn-brand-primary px-4 py-2 rounded-lg transition-colors">
+                  📤 Compartir
+                </button>
+                <a href="/blog" class="font-medium link-brand">
+                  ← Volver al blog
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Related Posts Section - Placeholder -->
+        <div class="bg-brand-secondary">
+          <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <h3 class="text-2xl font-bold mb-8 text-center" style="color: var(--text-primary);">Más artículos que podrían interesarte</h3>
+            <div class="text-center">
+              <a href="/blog" class="btn-brand-secondary px-6 py-3 rounded-lg transition-colors inline-block">
+                Ver todos los posts
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Función para compartir
+      window.sharePost = async () => {
+        const shareData = {
+          title: post.title,
+          text: post.excerpt || post.title,
+          url: window.location.href
+        };
+
+        try {
+          if (navigator.share) {
+            await navigator.share(shareData);
+          } else {
+            // Fallback: copiar URL al portapapeles
+            await navigator.clipboard.writeText(window.location.href);
+            alert('URL copiada al portapapeles');
+          }
+        } catch (error) {
+          console.error('Error compartiendo:', error);
+          // Fallback manual
+          const url = window.location.href;
+          prompt('Copia esta URL para compartir:', url);
+        }
+      };
+
+    } catch (error) {
+      console.error('Error cargando post:', error);
+      if (loadingEl) loadingEl.style.display = 'none';
+      
+      const isNotFound = error.message.includes('no encontrado');
+      
+      containerEl.innerHTML = `
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+          <div class="text-6xl mb-4">${isNotFound ? '📄' : '😔'}</div>
+          <h2 class="text-2xl font-bold mb-4" style="color: var(--text-primary);">
+            ${isNotFound ? 'Post no encontrado' : 'Error cargando el post'}
+          </h2>
+          <p class="mb-6" style="color: var(--text-secondary);">
+            ${isNotFound 
+              ? 'El post que buscas no existe o ha sido eliminado.' 
+              : 'Hubo un problema al cargar el post. Por favor, intenta de nuevo.'
+            }
+          </p>
+          <div class="space-x-4">
+            <a href="/blog" class="btn-brand-secondary px-6 py-3 rounded-lg transition-colors inline-block">
+              📚 Ver todos los posts
+            </a>
+            ${!isNotFound ? `
+              <button onclick=\"location.reload()\" class=\"btn-brand-primary px-6 py-3 rounded-lg transition-colors\">
+                🔄 Reintentar
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+  });
+
+  // Función para formatear el contenido (soporte para contenido rico y texto plano)
+  function formatContent(content) {
+    if (!content) return '';
+    
+    try {
+      // Intentar parsear como contenido rico (JSON)
+      const blocks = JSON.parse(content);
+      
+      if (Array.isArray(blocks)) {
+        // Renderizar bloques de contenido rico
+        return blocks.map(block => {
+          if (block.type === 'text') {
+            return `<div class="mb-4"><p class="leading-relaxed whitespace-pre-wrap" style="color: var(--blog-body-color)">${block.content}</p></div>`;
+          } else if (block.type === 'image' && block.imageUrl) {
+            return `
+              <div class="my-6">
+                <img src="${block.imageUrl}" alt="${block.imageAlt || ''}" class="w-full h-auto rounded-lg" style="max-height: 500px; object-fit: cover;">
+                ${block.imageAlt ? `<p class="text-sm italic mt-2 text-center" style="color: var(--blog-body-color)">${block.imageAlt}</p>` : ''}
+              </div>
+            `;
+          } else if (block.type === 'youtube' && block.youtubeUrl) {
+            const embed = toYouTubeEmbed(block.youtubeUrl);
+            return `
+              <div class="my-8">
+                <div class="aspect-video w-full">
+                  <iframe class="w-full h-full rounded-lg" src="${embed}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+              </div>
+            `;
+          }
+          return '';
+        }).join('');
+      }
+    } catch (error) {
+      // Si no se puede parsear como JSON, tratar como texto plano
+    }
+    
+    // Conversión básica de Markdown a HTML para contenido de texto plano
+    return content
+      // Headers
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      // Bold
+      .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*(.*)\*/gim, '<em>$1</em>')
+      // Links
+  .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" class="link-brand">$1</a>')
+      // Line breaks
+      .replace(/\n\n/gim, '</p><p>')
+      .replace(/\n/gim, '<br>')
+      // Wrap in paragraphs
+      .replace(/^(.+)$/gim, '<p>$1</p>')
+      // Clean up empty paragraphs
+      .replace(/<p><\/p>/gim, '')
+      // Fix nested paragraphs in headers
+      .replace(/<p>(<h[1-6]>.*<\/h[1-6]>)<\/p>/gim, '$1');
+  }
+
+  function toYouTubeEmbed(url) {
+    try {
+      const reg = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{6,})/;
+      const match = url.match(reg);
+      const id = match && match[1];
+      if (!id) return url;
+      return `https://www.youtube.com/embed/${id}`;
+    } catch {
+      return url;
+    }
+  }
+</script>
+
+<style>
+  /* Control de color del cuerpo del post. En modo oscuro forzamos blanco para máxima legibilidad */
+  :root { --blog-body-color: var(--text-secondary); }
+  :global(.dark) { --blog-body-color: #ffffff; }
+  :global(.dark) .prose { color: #ffffff; }
+  :global(.dark) .prose p,
+  :global(.dark) .prose li,
+  :global(.dark) .prose span { color: #ffffff; }
+
+  .prose {
+    color: var(--blog-body-color);
+    line-height: 1.75;
+  }
+
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .prose h1 { font-size: 2.25rem; }
+  .prose h2 { font-size: 1.875rem; }
+  .prose h3 { font-size: 1.5rem; }
+
+  .prose p { margin-bottom: 1.25rem; }
+  .prose > :first-child { margin-top: 0; }
+
+  .prose strong {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .prose em { font-style: italic; }
+
+  .prose a { color: var(--text-accent); text-decoration: none; }
+  .prose a:hover { text-decoration: underline; }
+
+  /* Code blocks and inline code */
+  .prose code { background-color: var(--bg-tertiary); padding: 0.15rem 0.35rem; border-radius: 0.25rem; }
+  .prose pre { background-color: var(--bg-tertiary); padding: 1rem; border-radius: 0.5rem; overflow: auto; }
+
+  /* Brand link utility */
+  .link-brand { color: var(--text-accent); }
+  .link-brand:hover { opacity: 0.9; }
+
+  /* Breadcrumb over hero image: force white for readability in both themes */
+  .breadcrumb-hero { color: #ffffff; }
+  .breadcrumb-hero a { color: #ffffff; text-decoration: none; }
+  .breadcrumb-hero a:hover { text-decoration: underline; }
+  .breadcrumb-hero .sep { color: rgba(255,255,255,0.8); }
+  .breadcrumb-hero .current { color: #ffffff; opacity: 0.95; }
+</style>

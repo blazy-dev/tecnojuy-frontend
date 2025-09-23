@@ -1,0 +1,42 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Navbar from '@/components/Navbar.astro';
+import AdminDashboard from '@/components/admin/AdminDashboard.tsx';
+---
+
+<Layout 
+  title="Panel de Administración - TecnoJuy" 
+  description="Panel de control para administradores de TecnoJuy"
+>
+  <Navbar />
+  
+  <div class="min-h-screen bg-secondary-50">
+    <!-- Page Header -->
+    <div class="bg-white shadow-sm border-b border-secondary-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-secondary-900">
+              Panel de Administración
+            </h1>
+            <p class="text-secondary-600 mt-1">
+              Gestiona el contenido y usuarios de la plataforma
+            </p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+              Administrador
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <AdminDashboard client:load />
+    </div>
+  </div>
+</Layout>
+
+

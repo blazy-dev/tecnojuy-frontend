@@ -1,0 +1,13 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Navbar from '@/components/Navbar.astro';
+import Dashboard from '@/components/Dashboard';
+---
+
+<Layout 
+  title="Dashboard - TecnoJuy" 
+  description="Panel principal de usuario en TecnoJuy"
+>
+  <Navbar />
+  <Dashboard client:load />
+</Layout>

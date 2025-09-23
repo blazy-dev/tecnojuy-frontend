@@ -1,0 +1,199 @@
+import React, { useState, useEffect } from 'react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+
+interface Banner {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  image: string;
+  ctaText: string;
+  ctaLink: string;
+  isActive: boolean;
+}
+
+interface HeroBannerProps {
+  banners?: Banner[];
+  autoSlide?: boolean;
+  slideInterval?: number;
+}
+
+const defaultBanners: Banner[] = [
+  {
+    id: 1,
+    title: "Aprende Tecnología del Futuro",
+    subtitle: "Cursos especializados en desarrollo web, IA y más",
+    description: "Domina las herramientas más demandadas del mercado tecnológico con nuestros cursos prácticos y certificaciones reconocidas.",
+    image: "/api/placeholder/1200/600",
+    ctaText: "Explorar Cursos",
+    ctaLink: "/cursos",
+    isActive: true
+  },
+  {
+    id: 2,
+    title: "Certificaciones Profesionales",
+    subtitle: "Valida tu conocimiento con certificados oficiales",
+    description: "Obtén certificaciones reconocidas por la industria que potenciarán tu carrera profesional en el mundo tech.",
+    image: "/api/placeholder/1200/600",
+    ctaText: "Ver Certificaciones",
+    ctaLink: "/certificaciones",
+    isActive: true
+  },
+  {
+    id: 3,
+    title: "Comunidad de Desarrolladores",
+    subtitle: "Aprende junto a miles de estudiantes",
+    description: "Únete a nuestra comunidad activa donde podrás resolver dudas, compartir proyectos y hacer networking.",
+    image: "/api/placeholder/1200/600",
+    ctaText: "Únete Ahora",
+    ctaLink: "/registro",
+    isActive: true
+  }
+];
+
+export default function HeroBanner({ 
+  banners = defaultBanners,
+  autoSlide = true,
+  slideInterval = 6000 
+}: HeroBannerProps) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const activeBanners = banners.filter(banner => banner.isActive);
+
+  // Auto-slide functionality
+  useEffect(() => {
+    if (!autoSlide || activeBanners.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % activeBanners.length);
+    }, slideInterval);
+
+    return () => clearInterval(interval);
+  }, [autoSlide, slideInterval, activeBanners.length]);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % activeBanners.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + activeBanners.length) % activeBanners.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  if (activeBanners.length === 0) return null;
+
+  return (
+    <section className="relative h-[70vh] md:h-[80vh] overflow-hidden">
+      {/* Banner Slides */}
+      <div className="relative h-full">
+        {activeBanners.map((banner, index) => (
+          <div
+            key={banner.id}
+            className={`absolute inset-0 transition-transform duration-700 ease-in-out ${
+              index === currentSlide 
+                ? 'translate-x-0' 
+                : index < currentSlide 
+                  ? '-translate-x-full' 
+                  : 'translate-x-full'
+            }`}
+          >
+            {/* Background Image */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${banner.image})` }}
+            >
+              {/* Overlay con gradiente de colores principales */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#00012d]/90 via-[#02a0c7]/70 to-[#00cc66]/80"></div>
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10 h-full flex items-center">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-3xl">
+                  {/* Subtitle */}
+                  <p className="text-[#00cc66] font-semibold text-lg mb-4 animate-fade-in-up delay-100">
+                    {banner.subtitle}
+                  </p>
+                  
+                  {/* Title */}
+                  <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight animate-fade-in-up delay-200">
+                    {banner.title}
+                  </h1>
+                  
+                  {/* Description */}
+                  <p className="text-xl text-gray-200 mb-8 leading-relaxed animate-fade-in-up delay-300">
+                    {banner.description}
+                  </p>
+                  
+                  {/* CTA Button */}
+                  <div className="animate-fade-in-up delay-400">
+                    <a 
+                      href={banner.ctaLink}
+                      className="inline-flex items-center px-8 py-4 bg-[#00cc66] hover:bg-[#00b359] text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                    >
+                      {banner.ctaText}
+                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Arrows */}
+      {activeBanners.length > 1 && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
+            aria-label="Banner anterior"
+          >
+            <ChevronLeftIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+          </button>
+          
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
+            aria-label="Banner siguiente"
+          >
+            <ChevronRightIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+          </button>
+        </>
+      )}
+
+      {/* Dots Indicator */}
+      {activeBanners.length > 1 && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+          {activeBanners.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                index === currentSlide 
+                  ? 'bg-[#00cc66] w-8' 
+                  : 'bg-white/50 hover:bg-white/80'
+              }`}
+              aria-label={`Ir al banner ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-8 z-20 text-white/70 animate-bounce">
+        <div className="flex flex-col items-center">
+          <span className="text-sm mb-2">Scroll</span>
+          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

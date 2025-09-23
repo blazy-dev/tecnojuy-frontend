@@ -1,0 +1,183 @@
+/* Paleta de colores TecnoJuy - Modo Claro y Oscuro */
+:root {
+  /* Colores base de marca - CORREGIDOS */
+  --brand-primary: #00012e;     /* Azul oscuro principal */
+  --brand-secondary: #00c961;   /* Verde principal */
+  
+  /* Paleta extendida armoniosa */
+  --blue-900: #00012e;
+  --blue-800: #000240;
+  --blue-700: #001755;
+  --blue-600: #002d6b;
+  --blue-500: #004380;
+  --blue-400: #1e5396;
+  --blue-300: #3c6aac;
+  --blue-200: #5a80c2;
+  --blue-100: #7896d8;
+  --blue-50: #96acee;
+  
+  --green-900: #00c961;
+  --green-800: #00b558;
+  --green-700: #00a14f;
+  --green-600: #008d46;
+  --green-500: #00793d;
+  --green-400: #1a8a4a;
+  --green-300: #349b57;
+  --green-200: #4eac64;
+  --green-100: #68bd71;
+  --green-50: #82ce7e;
+}
+
+/* Tema Claro (por defecto) */
+:root {
+  /* Fondos */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f9fa;
+  --bg-tertiary: #f1f5f9;
+  --bg-accent: #e6f7ff;
+  
+  /* Textos */
+  --text-primary: #00012d;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+  
+  /* Bordes y divisores */
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --border-accent: #02a0c7;
+  
+  /* Estados interactivos */
+  --hover-bg: #f7f9fa;
+  --hover-border: #02a0c7;
+  --active-bg: #e6f7ff;
+  
+  /* Colores de marca en contexto */
+  --primary: #00012d;
+  --primary-hover: #000240;
+  --secondary: #00cc66;
+  --secondary-hover: #00b359;
+  --accent: #02a0c7;
+  --accent-hover: #0289a3;
+  
+  /* Gradientes */
+  --gradient-primary: linear-gradient(135deg, #00012d 0%, #02a0c7 100%);
+  --gradient-secondary: linear-gradient(135deg, #00cc66 0%, #02a0c7 100%);
+  --gradient-hero: linear-gradient(135deg, #00012d 0%, #02a0c7 50%, #00cc66 100%);
+  
+  /* Sombras */
+  --shadow-sm: 0 1px 2px 0 rgb(0 1 45 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 1 45 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 1 45 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 1 45 / 0.1);
+}
+
+/* Tema Oscuro */
+[data-theme="dark"] {
+  /* Fondos */
+  --bg-primary: #1e293b;
+  --bg-secondary: #0f172a;
+  --bg-tertiary: #334155;
+  --bg-accent: #1e3a8a;
+  
+  /* Textos */
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-inverse: #00012e;
+  
+  /* Bordes y divisores */
+  --border-primary: #475569;
+  --border-secondary: #64748b;
+  --border-accent: #5a80c2;
+  
+  /* Estados interactivos */
+  --hover-bg: #334155;
+  --hover-border: #5a80c2;
+  --active-bg: #475569;
+  
+  /* Colores de marca en contexto para modo oscuro */
+  --primary: #5a80c2;
+  --primary-hover: #7896d8;
+  --secondary: #68bd71;
+  --secondary-hover: #82ce7e;
+  --accent: #5a80c2; /* Usar un azul de la paleta para el acento en modo oscuro */
+  --accent-hover: #7896d8;
+  
+  /* Gradientes para modo oscuro */
+  --gradient-primary: linear-gradient(135deg, #1e5396 0%, #5a80c2 100%);
+  --gradient-secondary: linear-gradient(135deg, #00c961 0%, #68bd71 100%);
+  --gradient-hero: linear-gradient(135deg, #1e5396 0%, #5a80c2 50%, #00c961 100%);
+  
+  /* Sombras para modo oscuro */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+}
+
+/* Clases de utilidad para colores */
+.bg-primary-dark { background-color: var(--primary) !important; }
+.bg-primary-green { background-color: var(--secondary) !important; }
+.bg-secondary-cyan { background-color: var(--accent) !important; }
+.bg-secondary-light { background-color: var(--bg-secondary) !important; }
+
+.text-primary-dark { color: var(--primary) !important; }
+.text-primary-green { color: var(--secondary) !important; }
+.text-secondary-cyan { color: var(--accent) !important; }
+.text-on-dark { color: var(--text-inverse) !important; }
+.text-on-light { color: var(--text-primary) !important; }
+
+.border-primary-green { border-color: var(--secondary); }
+.border-secondary-cyan { border-color: var(--accent); }
+
+/* Botones con los colores principales */
+.btn-primary {
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: var(--text-inverse);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: var(--text-inverse);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-accent:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}

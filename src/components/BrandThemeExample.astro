@@ -1,0 +1,73 @@
+---
+// Ejemplo de uso de los nuevos colores de marca
+---
+
+<!-- Ejemplo de card con colores de marca -->
+<div class="bg-white dark:bg-brand-tertiary border border-gray-200 dark:border-brand rounded-lg p-6 shadow-sm">
+  <h3 class="text-gray-900 dark:text-brand-primary text-xl font-semibold mb-2">
+    Título con color de marca
+  </h3>
+  <p class="text-gray-600 dark:text-brand-secondary mb-4">
+    Subtítulo con color azul de la marca en modo oscuro
+  </p>
+  <div class="flex gap-3">
+    <button class="btn-brand-primary px-4 py-2 rounded-lg font-medium">
+      Botón Principal
+    </button>
+    <button class="btn-brand-secondary px-4 py-2 rounded-lg font-medium">
+      Botón Secundario
+    </button>
+  </div>
+</div>
+
+<!-- Ejemplo de navegación con colores de marca -->
+<nav class="bg-white dark:bg-brand-primary border-b border-gray-200 dark:border-brand">
+  <div class="container mx-auto px-4">
+    <div class="flex items-center justify-between h-16">
+      <div class="flex items-center space-x-8">
+        <a href="/" class="text-gray-900 dark:text-brand-primary font-bold text-xl">
+          TecnoJuy
+        </a>
+        <div class="flex space-x-6">
+          <a href="/cursos" class="text-gray-600 dark:text-brand-secondary hover:text-gray-900 dark:hover:text-brand-primary">
+            Cursos
+          </a>
+          <a href="/blog" class="text-gray-600 dark:text-brand-secondary hover:text-gray-900 dark:hover:text-brand-primary">
+            Blog
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Ejemplo de formulario con colores de marca -->
+<form class="bg-white dark:bg-brand-tertiary border border-gray-200 dark:border-brand rounded-lg p-6">
+  <div class="mb-4">
+    <label class="block text-gray-700 dark:text-brand-primary text-sm font-bold mb-2">
+      Nombre
+    </label>
+    <input 
+      type="text" 
+      class="w-full px-3 py-2 border border-gray-300 dark:border-brand rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-brand-secondary bg-white dark:bg-brand-secondary text-gray-900 dark:text-brand-primary"
+      placeholder="Tu nombre"
+    />
+  </div>
+  <div class="mb-6">
+    <label class="block text-gray-700 dark:text-brand-primary text-sm font-bold mb-2">
+      Mensaje
+    </label>
+    <textarea 
+      rows="4"
+      class="w-full px-3 py-2 border border-gray-300 dark:border-brand rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-brand-secondary bg-white dark:bg-brand-secondary text-gray-900 dark:text-brand-primary"
+      placeholder="Tu mensaje"
+    ></textarea>
+  </div>
+  <button type="submit" class="btn-brand-primary px-6 py-2 rounded-lg font-medium">
+    Enviar Mensaje
+  </button>
+</form>
+
+<style>
+/* Estilos adicionales específicos para este componente si son necesarios */
+</style>

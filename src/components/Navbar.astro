@@ -1,0 +1,131 @@
+---
+import AuthSection from '@/components/AuthSection';
+import SimpleThemeToggle from '@/components/SimpleThemeToggle';
+
+const currentPath = Astro.url.pathname;
+
+const navItems = [
+  { name: 'Inicio', href: '/', icon: 'home' },
+  { name: 'Blog', href: '/blog', icon: 'newspaper' },
+  { name: 'Cursos', href: '/cursos', icon: 'academic-cap' },
+  { name: 'Mis Cursos', href: '/mis-cursos', icon: 'book-open' },
+  { name: 'Contacto', href: '/contacto', icon: 'envelope' }
+];
+---
+
+<nav class="sticky top-0 z-50 bg-white/95 dark:bg-brand-dark/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-600 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo -->
+      <div class="flex-shrink-0">
+        <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
+          <img 
+            src="/logo final.ico" 
+            alt="TecnoJuy" 
+            class="w-12 h-12 object-contain"
+          />
+        </a>
+      </div>
+
+      <!-- Navigation Links - Desktop -->
+      <div class="hidden md:block">
+        <div class="ml-10 flex items-baseline space-x-4">
+          {navItems.map((item) => (
+            <a
+              href={item.href}
+              class={currentPath === item.href 
+                ? 'px-3 py-2 rounded-md text-sm font-medium text-cyan-600 dark:text-brand-green bg-cyan-50 dark:bg-brand-green/20 border border-cyan-200 dark:border-brand-green' 
+                : 'px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-brand-blue hover:text-cyan-600 dark:hover:text-brand-green hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors'
+              }
+            >
+              {item.name}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <!-- Auth Section -->
+      <div class="hidden md:flex items-center space-x-3">
+        <SimpleThemeToggle client:load />
+        <AuthSection client:load />
+      </div>
+
+      <!-- Mobile menu button -->
+      <div class="md:hidden">
+        <button
+          id="mobile-menu-button"
+          type="button"
+          class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+          aria-controls="mobile-menu"
+          aria-expanded="false"
+        >
+          <span class="sr-only">Abrir menú principal</span>
+          <!-- Hamburger icon -->
+          <svg class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div class="md:hidden hidden" id="mobile-menu">
+    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class={currentPath === item.href 
+            ? 'block px-3 py-2 rounded-md text-base font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' 
+            : 'block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800'
+          }
+        >
+          {item.name}
+        </a>
+      ))}
+      <!-- Mobile auth section -->
+      <div class="pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between px-3">
+        <SimpleThemeToggle client:load />
+        <AuthSection client:load isMobile={true} />
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  // Mobile menu toggle
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  mobileMenuButton?.addEventListener('click', () => {
+    const isHidden = mobileMenu?.classList.contains('hidden');
+    if (isHidden) {
+      mobileMenu?.classList.remove('hidden');
+      mobileMenuButton.setAttribute('aria-expanded', 'true');
+    } else {
+      mobileMenu?.classList.add('hidden');
+      mobileMenuButton.setAttribute('aria-expanded', 'false');
+    }
+  });
+</script>
+
+<style>
+  /* Importar estilos de colores */
+  @import url('../styles/colors.css');
+  
+  /* Spinner de carga personalizado */
+  .loading-spinner {
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #00cc66;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+

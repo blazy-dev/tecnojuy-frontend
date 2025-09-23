@@ -1,0 +1,378 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Navbar from '@/components/Navbar.astro';
+
+export const prerender = false;
+---
+
+<Layout title="Mis Cursos - TecnoJuy">
+  <Navbar />
+  <main>
+    <div id="my-courses-container" class="container mx-auto px-4 py-8" style="background-color: var(--bg-secondary); min-height: 100vh;">
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold mb-4" style="color: var(--text-primary);">Mis Cursos</h1>
+        <p class="text-lg" style="color: var(--text-secondary);">Continúa tu aprendizaje donde lo dejaste</p>
+      </div>
+      
+      <!-- Loading -->
+      <div id="loading" class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2" style="border-color: var(--accent);"></div>
+        <span class="ml-3" style="color: var(--text-secondary);">Cargando tus cursos...</span>
+      </div>
+      
+      <!-- Error -->
+      <div id="error" class="hidden rounded-lg p-6 text-center" style="background-color: #fef2f2; border: 1px solid #fecaca;">
+        <div class="mb-2" style="color: #dc2626;">❌ Error al cargar tus cursos</div>
+        <p class="text-sm" style="color: #b91c1c;">Inicia sesión para ver tus cursos</p>
+        <a href="/login" class="inline-block mt-3 px-4 py-2 rounded-lg transition-colors" style="background-color: var(--accent); color: var(--text-inverse);" onmouseover="this.style.backgroundColor='var(--accent-hover)';" onmouseout="this.style.backgroundColor='var(--accent)';">
+          Iniciar Sesión
+        </a>
+      </div>
+      
+      <!-- Progress Summary -->
+      <div id="progress-summary" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="rounded-lg p-6 text-white" style="background: var(--gradient-primary);">
+          <div class="flex items-center justify-between">
+            <div>
+              <p style="opacity: 0.9;">Cursos Activos</p>
+              <p id="active-courses-count" class="text-3xl font-bold">0</p>
+            </div>
+            <div class="text-4xl">📚</div>
+          </div>
+        </div>
+        
+        <div class="rounded-lg p-6 text-white" style="background: var(--gradient-secondary);">
+          <div class="flex items-center justify-between">
+            <div>
+              <p style="opacity: 0.9;">Cursos Completados</p>
+              <p id="completed-courses-count" class="text-3xl font-bold">0</p>
+            </div>
+            <div class="text-4xl">✅</div>
+          </div>
+        </div>
+        
+        <div class="rounded-lg p-6 text-white" style="background: var(--gradient-primary);">
+          <div class="flex items-center justify-between">
+            <div>
+              <p style="opacity: 0.9;">Tiempo Total</p>
+              <p id="total-hours" class="text-3xl font-bold">0h</p>
+            </div>
+            <div class="text-4xl">⏱️</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Course Filters -->
+      <div id="course-filters" class="hidden mb-6 flex flex-wrap gap-4">
+        <button class="filter-btn active" data-filter="all">Todos</button>
+        <button class="filter-btn" data-filter="accessible">Con Acceso</button>
+        <button class="filter-btn" data-filter="blocked">Bloqueados</button>
+        <button class="filter-btn" data-filter="in-progress">En Progreso</button>
+        <button class="filter-btn" data-filter="completed">Completados</button>
+        <button class="filter-btn" data-filter="not-started">Sin Empezar</button>
+      </div>
+      
+      <!-- My Courses Grid -->
+      <div id="my-courses-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Los cursos se llenarán dinámicamente -->
+      </div>
+      
+      <!-- No courses -->
+      <div id="no-courses" class="hidden text-center py-12">
+        <div class="text-6xl mb-4" style="color: var(--text-muted);">📚</div>
+        <h3 class="text-xl font-semibold mb-2" style="color: var(--text-primary);">No tienes cursos aún</h3>
+        <p class="mb-4" style="color: var(--text-secondary);">Explora nuestro catálogo y comienza tu aprendizaje</p>
+        <a href="/cursos" class="px-6 py-3 rounded-lg transition-colors" style="background-color: var(--accent); color: var(--text-inverse);" onmouseover="this.style.backgroundColor='var(--accent-hover)';" onmouseout="this.style.backgroundColor='var(--accent)';">
+          Ver Catálogo de Cursos
+        </a>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { api } from '@/lib/api';
+
+  interface Course {
+    id: number;
+    title: string;
+    short_description?: string;
+    cover_image_url?: string;
+    level?: string;
+    language?: string;
+    category?: string;
+    price?: number;
+    is_premium: boolean;
+    instructor_name: string;
+    lesson_count: number;
+    estimated_duration_hours?: number;
+    has_access: boolean;
+    progress_percentage?: number;
+    created_at: string;
+  }
+
+  const loadingEl = document.getElementById('loading')!;
+  const errorEl = document.getElementById('error')!;
+  const progressSummaryEl = document.getElementById('progress-summary')!;
+  const courseFiltersEl = document.getElementById('course-filters')!;
+  const myCoursesGridEl = document.getElementById('my-courses-grid')!;
+  const noCoursesEl = document.getElementById('no-courses')!;
+
+  let userCourses: Course[] = [];
+  let filteredCourses: Course[] = [];
+
+  function formatDuration(hours?: number): string {
+    if (!hours) return 'Duración no especificada';
+    if (hours < 1) return `${Math.round(hours * 60)} min`;
+    return `${hours}h`;
+  }
+
+  function getProgressStatus(progress?: number): 'not-started' | 'in-progress' | 'completed' {
+    if (!progress || progress === 0) return 'not-started';
+    if (progress >= 100) return 'completed';
+    return 'in-progress';
+  }
+
+  function getProgressColor(progress?: number): string {
+    const status = getProgressStatus(progress);
+    switch (status) {
+      case 'completed': return 'bg-green-500';
+      case 'in-progress': return 'bg-blue-500';
+      default: return 'bg-gray-300';
+    }
+  }
+
+  function createCourseCard(course: Course): string {
+    const progress = course.progress_percentage || 0;
+    const status = getProgressStatus(progress);
+    const progressColor = getProgressColor(progress);
+    
+    // Determinar si el curso está bloqueado
+    const isBlocked = !course.has_access && course.is_premium;
+    
+    const statusBadge = isBlocked 
+      ? '<span class="inline-block text-xs px-2 py-1 rounded-full" style="background-color: #fef2f2; color: #dc2626;">🔒 Bloqueado</span>'
+      : {
+          'completed': '<span class="inline-block text-xs px-2 py-1 rounded-full" style="background-color: #dcfce7; color: #166534;">✅ Completado</span>',
+          'in-progress': '<span class="inline-block text-xs px-2 py-1 rounded-full" style="background-color: var(--bg-accent); color: var(--accent);">📚 En Progreso</span>',
+          'not-started': '<span class="inline-block text-xs px-2 py-1 rounded-full" style="background-color: var(--bg-tertiary); color: var(--text-muted);">🚀 Sin Empezar</span>'
+        }[status];
+
+    const cardClass = isBlocked 
+      ? "course-card rounded-lg shadow-md overflow-hidden opacity-75 cursor-not-allowed"
+      : "course-card rounded-lg shadow-md overflow-hidden transition-all transform hover:scale-105 cursor-pointer";
+
+    const clickHandler = isBlocked 
+      ? "onclick=\"alert('Este curso está bloqueado. Contacta al administrador para obtener acceso.')\""
+      : `onclick="window.location.href='/cursos/${course.id}'"`;
+
+    return `
+      <div class="${cardClass}" 
+           data-status="${isBlocked ? 'blocked' : status}" 
+           ${clickHandler}
+           style="background-color: ${isBlocked ? 'var(--bg-tertiary)' : 'var(--bg-primary)'}; box-shadow: var(--shadow-md);"
+           onmouseover="${!isBlocked ? "this.style.boxShadow='var(--shadow-lg)';" : ""}"
+           onmouseout="${!isBlocked ? "this.style.boxShadow='var(--shadow-md)';" : ""}">
+        <div class="aspect-video flex items-center justify-center relative" style="background: var(--gradient-primary);">
+          ${course.cover_image_url 
+            ? `<img src="${course.cover_image_url}" alt="${course.title}" class="w-full h-full object-cover ${isBlocked ? 'grayscale' : ''}">`
+            : `<div class="text-white text-4xl ${isBlocked ? 'opacity-50' : ''}">📚</div>`
+          }
+          
+          ${isBlocked ? `
+            <!-- Overlay de bloqueo -->
+            <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+              <div class="text-center text-white">
+                <div class="text-4xl mb-2">🔒</div>
+                <p class="text-sm font-medium">Curso Bloqueado</p>
+              </div>
+            </div>
+          ` : `
+            <!-- Progress overlay -->
+            <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2">
+              <div class="w-full rounded-full h-2" style="background-color: var(--border-primary);">
+                <div class="h-2 rounded-full transition-all" style="width: ${progress}%; background-color: var(--accent);"></div>
+              </div>
+              <p class="text-white text-xs mt-1">${progress}% completado</p>
+            </div>
+          `}
+        </div>
+        
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-3">
+            <h3 class="text-xl font-semibold leading-tight" style="color: ${isBlocked ? 'var(--text-muted)' : 'var(--text-primary)'};">${course.title}</h3>
+            ${statusBadge}
+          </div>
+          
+          <p class="text-sm mb-4 line-clamp-2" style="color: var(--text-secondary);">
+            ${course.short_description || 'Sin descripción disponible'}
+          </p>
+          
+          <div class="space-y-2 text-sm" style="color: ${isBlocked ? 'var(--text-muted)' : 'var(--text-muted)'};">
+            <div class="flex items-center gap-2">
+              <span>👨‍🏫</span>
+              <span>${course.instructor_name}</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-1">
+                <span>📖</span>
+                <span>${course.lesson_count} lecciones</span>
+              </div>
+              
+              <div class="flex items-center gap-1">
+                <span>⏱️</span>
+                <span>${formatDuration(course.estimated_duration_hours)}</span>
+              </div>
+            </div>
+            
+            ${course.level ? `
+              <div class="flex items-center gap-1">
+                <span>📊</span>
+                <span>Nivel: ${course.level}</span>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="mt-4 pt-4" style="border-top: 1px solid var(--border-primary);">
+            ${isBlocked ? `
+              <button class="w-full px-4 py-2 rounded-lg cursor-not-allowed text-sm font-medium" style="background-color: var(--text-muted); color: var(--text-inverse);" disabled>
+                🔒 Solicitar Acceso
+              </button>
+            ` : `
+              <button class="w-full px-4 py-2 rounded-lg transition-colors text-sm font-medium" style="background-color: var(--accent); color: var(--text-inverse);" onmouseover="this.style.backgroundColor='var(--accent-hover)';" onmouseout="this.style.backgroundColor='var(--accent)';">
+                ${status === 'not-started' ? 'Comenzar Curso' : status === 'completed' ? 'Revisar Curso' : 'Continuar Curso'}
+              </button>
+            `}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateProgressSummary() {
+    const accessibleCourses = userCourses.filter(c => c.has_access);
+    const activeCourses = accessibleCourses.filter(c => getProgressStatus(c.progress_percentage) === 'in-progress').length;
+    const completedCourses = accessibleCourses.filter(c => getProgressStatus(c.progress_percentage) === 'completed').length;
+    const totalHours = accessibleCourses.reduce((sum, c) => sum + (c.estimated_duration_hours || 0), 0);
+
+    document.getElementById('active-courses-count')!.textContent = activeCourses.toString();
+    document.getElementById('completed-courses-count')!.textContent = completedCourses.toString();
+    document.getElementById('total-hours')!.textContent = `${totalHours}h`;
+  }
+
+  function filterCourses(filter: string) {
+    if (filter === 'all') {
+      filteredCourses = userCourses;
+    } else if (filter === 'accessible') {
+      filteredCourses = userCourses.filter(course => course.has_access);
+    } else if (filter === 'blocked') {
+      filteredCourses = userCourses.filter(course => !course.has_access && course.is_premium);
+    } else {
+      // Filtros de progreso solo para cursos con acceso
+      filteredCourses = userCourses.filter(course => 
+        course.has_access && getProgressStatus(course.progress_percentage) === filter
+      );
+    }
+    renderCourses();
+  }
+
+  function renderCourses() {
+    if (filteredCourses.length === 0) {
+      myCoursesGridEl.classList.add('hidden');
+      noCoursesEl.classList.remove('hidden');
+      return;
+    }
+    
+    noCoursesEl.classList.add('hidden');
+    myCoursesGridEl.innerHTML = filteredCourses.map(course => createCourseCard(course)).join('');
+    myCoursesGridEl.classList.remove('hidden');
+  }
+
+  async function loadMyCourses() {
+    try {
+      loadingEl.classList.remove('hidden');
+      errorEl.classList.add('hidden');
+      
+      // Obtener TODOS los cursos del usuario (con acceso y bloqueados)
+      const courses = await api.getMyCoursesAll();
+      
+      userCourses = courses;
+      filteredCourses = userCourses;
+      
+      if (userCourses.length === 0) {
+        loadingEl.classList.add('hidden');
+        noCoursesEl.classList.remove('hidden');
+        return;
+      }
+      
+      updateProgressSummary();
+      renderCourses();
+      
+      progressSummaryEl.classList.remove('hidden');
+      courseFiltersEl.classList.remove('hidden');
+      loadingEl.classList.add('hidden');
+      
+    } catch (error) {
+      console.error('❌ Error cargando mis cursos:', error);
+      loadingEl.classList.add('hidden');
+      errorEl.classList.remove('hidden');
+    }
+  }
+
+  // Event listeners para filtros
+  setTimeout(() => {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const filter = target.dataset.filter!;
+        
+        // Actualizar botón activo
+        filterButtons.forEach(b => b.classList.remove('active'));
+        target.classList.add('active');
+        
+        filterCourses(filter);
+      });
+    });
+  }, 500);
+
+  // Cargar cursos al inicializar
+  loadMyCourses();
+</script>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .filter-btn {
+    @apply px-4 py-2 rounded-lg border transition-colors;
+    border-color: var(--border-primary);
+    color: var(--text-secondary);
+    background-color: var(--bg-primary);
+  }
+
+  .filter-btn:hover {
+    background-color: var(--hover-bg);
+    border-color: var(--accent);
+  }
+
+  .filter-btn.active {
+    background-color: var(--accent);
+    color: var(--text-inverse);
+    border-color: var(--accent);
+  }
+
+  .course-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .course-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+</style>

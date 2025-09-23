@@ -1,0 +1,241 @@
+/* Tema oscuro personalizado con colores de marca TecnoJuy */
+
+:root {
+  /* Variables para modo claro (valores por defecto) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-accent: #2563eb;
+  --border-color: #e5e7eb;
+}
+
+.dark {
+  /* Variables para modo oscuro con colores de marca */
+  --bg-primary: #00012e;     /* Fondo principal oscuro de la marca */
+  --bg-secondary: #0a0a2e;   /* Fondo secundario (ligeramente más claro) */
+  --bg-tertiary: #1a1a3e;    /* Fondo terciario (cards, modales) */
+  --text-primary: #00cc63;   /* Texto principal verde de la marca */
+  --text-secondary: #029dc4; /* Texto secundario azul de la marca */
+  --text-accent: #00cc63;    /* Color de acento */
+  --border-color: #2a2a4e;   /* Bordes en modo oscuro */
+}
+
+/* Clases utilitarias personalizadas */
+.bg-brand-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-brand-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-brand-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.bg-brand-dark {
+  background-color: #00012e;
+}
+
+.text-brand-primary {
+  color: var(--text-primary);
+}
+
+.text-brand-secondary {
+  color: var(--text-secondary);
+}
+
+.text-brand-accent {
+  color: var(--text-accent);
+}
+
+.text-brand-green {
+  color: #00cc63;
+}
+
+.text-brand-blue {
+  color: #029dc4;
+}
+
+.border-brand {
+  border-color: var(--border-color);
+}
+
+/* Sobrescribir algunas clases específicas para modo oscuro */
+.dark .bg-gray-900 {
+  background-color: #00012e !important;
+}
+
+.dark .bg-gray-800 {
+  background-color: #1a1a3e !important;
+}
+
+.dark .bg-gray-700 {
+  background-color: #2a2a4e !important;
+}
+
+/* Avoid overriding utility class .text-white in dark mode to preserve contrast on buttons */
+/* .dark .text-white { color: #00cc63 !important; } */
+
+.dark .text-gray-400 {
+  color: #029dc4 !important;
+}
+
+.dark .text-gray-300 {
+  color: #00cc63 !important;
+}
+
+/* Gradientes personalizados para modo oscuro */
+.dark .bg-gradient-to-br {
+  background: linear-gradient(to bottom right, #00012e, #1a1a3e, #2a2a4e) !important;
+}
+
+/* Cards y contenedores */
+.dark .card-brand {
+  background-color: #1a1a3e;
+  border: 1px solid #2a2a4e;
+  color: #00cc63;
+}
+
+.dark .card-brand:hover {
+  background-color: #2a2a4e;
+  border-color: #029dc4;
+}
+
+/* Alinear todas las "course-card" al color de la navbar en oscuro */
+.dark .course-card {
+  background-color: #00012e !important; /* mismo que navbar */
+  border-color: #2a2a4e !important;
+}
+
+/* Botones con colores de marca */
+.btn-brand-primary {
+  background-color: #00cc63;
+  color: #00012e;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-brand-primary:hover {
+  background-color: #00a552;
+  transform: translateY(-1px);
+}
+
+.btn-brand-secondary {
+  background-color: #029dc4;
+  color: #ffffff;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-brand-secondary:hover {
+  background-color: #0284a3;
+  transform: translateY(-1px);
+}
+
+/* Enlaces con colores de marca */
+/* Avoid global anchor recolor in dark mode; prefer a specific `.link-brand` class */
+/* .dark a { color: #00cc63; }
+.dark a:hover { color: #029dc4; } */
+
+/* Inputs y formularios */
+.dark input, 
+.dark select, 
+.dark textarea {
+  background-color: #1a1a3e !important;
+  border-color: #2a2a4e !important;
+  color: #00cc63 !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #029dc4 !important;
+  box-shadow: 0 0 0 3px rgba(2, 157, 196, 0.1) !important;
+}
+
+/* Navegación */
+.dark .navbar {
+  background-color: #00012e;
+  border-bottom: 1px solid #2a2a4e;
+}
+
+.dark .navbar a {
+  color: #00cc63;
+}
+
+.dark .navbar a:hover {
+  color: #029dc4;
+}
+
+/* Footer */
+.dark .footer {
+  background-color: #00012e;
+  border-top: 1px solid #2a2a4e;
+}
+
+/* Modales */
+.dark .modal {
+  background-color: #1a1a3e;
+  border: 1px solid #2a2a4e;
+}
+
+.dark .modal-header {
+  background-color: #00012e;
+  border-bottom: 1px solid #2a2a4e;
+}
+
+/* Códigos y bloques de código */
+.dark code {
+  background-color: #1a1a3e;
+  color: #00cc63;
+  border: 1px solid #2a2a4e;
+}
+
+.dark pre {
+  background-color: #00012e;
+  border: 1px solid #2a2a4e;
+}
+
+/* Tablas */
+.dark table {
+  background-color: #1a1a3e;
+}
+
+.dark th {
+  background-color: #00012e;
+  color: #00cc63;
+  border-bottom: 1px solid #2a2a4e;
+}
+
+.dark td {
+  border-bottom: 1px solid #2a2a4e;
+  color: #029dc4;
+}
+
+/* Alertas y notificaciones */
+.dark .alert-success {
+  background-color: rgba(0, 204, 99, 0.1);
+  border-color: #00cc63;
+  color: #00cc63;
+}
+
+.dark .alert-info {
+  background-color: rgba(2, 157, 196, 0.1);
+  border-color: #029dc4;
+  color: #029dc4;
+}
+
+.dark .alert-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+.dark .alert-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #f87171;
+}

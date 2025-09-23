@@ -1,0 +1,54 @@
+import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
+import tailwind from '@astrojs/tailwind';
+
+export default defineConfig({
+  integrations: [
+    react(),
+    tailwind({
+      applyBaseStyles: false
+    })
+  ],
+  output: 'hybrid',
+  server: {
+    port: 4321,
+    host: true
+  },
+  vite: {
+    define: {
+      __API_URL__: JSON.stringify(process.env.PUBLIC_API_URL || 'http://localhost:8000')
+    },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+          configure: (proxy, options) => {
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              // Preservar todas las headers importantes
+              const headersToPreserve = ['cookie', 'authorization', 'content-type'];
+              headersToPreserve.forEach(header => {
+                if (req.headers[header]) {
+                  proxyReq.setHeader(header, req.headers[header]);
+                }
+              });
+              
+              // Log simplificado
+              console.log(`� ${req.method} ${req.url}`);
+            });
+            
+            proxy.on('proxyRes', (proxyRes, req, res) => {
+              // Solo mostrar errores
+              if (proxyRes.statusCode >= 400) {
+                console.log(`❌ ${proxyRes.statusCode} for ${req.url}`);
+              }
+            });
+          }
+        }
+      }
+    }
+  }
+});
+

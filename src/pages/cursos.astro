@@ -1,0 +1,334 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Navbar from '@/components/Navbar.astro';
+
+export const prerender = false;
+---
+
+<Layout title="Cursos - TecnoJuy">
+  <Navbar />
+  <main class="courses-page">
+  <div id="courses-container" class="container mx-auto px-4 py-8" style="background-color: var(--bg-secondary); min-height: 100vh;">
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold mb-4" style="color: var(--text-primary);">Nuestros Cursos</h1>
+        <p class="text-lg" style="color: var(--text-secondary);">Descubre todos los cursos disponibles y comienza tu aprendizaje</p>
+      </div>
+      
+      <!-- Filtros y búsqueda -->
+      <div class="mb-8 flex flex-col md:flex-row md:items-end gap-4">
+        <input id="search-input" type="text" placeholder="Buscar por nombre..." class="rounded-lg px-4 py-2 w-full md:w-1/3" style="border: 1px solid var(--border-primary); background-color: var(--bg-primary); color: var(--text-primary);" />
+        <select id="category-filter" class="rounded-lg px-4 py-2 w-full md:w-1/4" style="border: 1px solid var(--border-primary); background-color: var(--bg-primary); color: var(--text-primary);">
+          <option value="">Todas las categorías</option>
+        </select>
+        <select id="level-filter" class="rounded-lg px-4 py-2 w-full md:w-1/4" style="border: 1px solid var(--border-primary); background-color: var(--bg-primary); color: var(--text-primary);">
+          <option value="">Todos los niveles</option>
+        </select>
+        <select id="sort-filter" class="rounded-lg px-4 py-2 w-full md:w-1/4" style="border: 1px solid var(--border-primary); background-color: var(--bg-primary); color: var(--text-primary);">
+          <option value="">Ordenar por...</option>
+          <option value="price">Precio</option>
+          <option value="duration">Duración</option>
+          <option value="title">Nombre</option>
+        </select>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2" style="border-color: var(--accent);"></div>
+        <span class="ml-3" style="color: var(--text-secondary);">Cargando cursos...</span>
+      </div>
+
+      <!-- Error -->
+      <div id="error" class="hidden rounded-lg p-6 text-center" style="background-color: #fef2f2; border: 1px solid #fecaca;">
+        <div class="mb-2" style="color: #dc2626;">❌ Error al cargar los cursos</div>
+        <p class="text-sm" style="color: #b91c1c;">Intenta recargar la página</p>
+      </div>
+
+      <!-- Courses Grid -->
+      <div id="courses-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300">
+        <!-- Los cursos se llenarán dinámicamente -->
+      </div>
+
+      <!-- No courses -->
+      <div id="no-courses" class="hidden text-center py-12">
+        <div class="text-6xl mb-4" style="color: var(--text-muted);">📚</div>
+        <h3 class="text-xl font-semibold mb-2" style="color: var(--text-primary);">No hay cursos disponibles</h3>
+        <p style="color: var(--text-secondary);">Pronto habrá nuevos cursos disponibles</p>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { api } from '@/lib/api';
+
+  interface Course {
+    id: number;
+    title: string;
+    short_description?: string;
+    cover_image_url?: string;
+    level?: string;
+    language?: string;
+    category?: string;
+    price?: number;
+    is_premium: boolean;
+    instructor_name: string;
+    lesson_count: number;
+    estimated_duration_hours?: number;
+    has_access: boolean;
+    progress_percentage: number;
+  }
+
+  const loadingEl = document.getElementById('loading')!;
+  const errorEl = document.getElementById('error')!;
+  const coursesGridEl = document.getElementById('courses-grid')!;
+  const noCoursesEl = document.getElementById('no-courses')!;
+
+  function formatDuration(hours?: number): string {
+    if (!hours) return 'Duración no especificada';
+    if (hours < 1) return `${Math.round(hours * 60)} min`;
+    return `${hours}h`;
+  }
+
+  function formatPrice(price?: number, isPremium: boolean): string {
+    if (!isPremium) return 'Gratis';
+    if (!price) return 'Premium';
+    return `$${price}`;
+  }
+
+  function createCourseCard(course: Course): string {
+    console.log('🔍 Creando tarjeta para curso:', course.title, 'Progreso:', course.progress_percentage, 'Acceso:', course.has_access);
+    
+    const accessBadge = course.has_access 
+      ? '<span class="inline-block text-xs px-2 py-1 rounded-full" style="background-color: #dcfce7; color: #166534;">✅ Tienes acceso</span>'
+      : course.is_premium 
+        ? '<span class="inline-block text-xs px-2 py-1 rounded-full" style="background-color: #fed7aa; color: #9a3412;">🔒 Premium</span>'
+        : '<span class="inline-block text-xs px-2 py-1 rounded-full" style="background-color: var(--bg-accent); color: var(--accent);">🆓 Gratis</span>';
+
+    // Mostrar progreso si el usuario tiene acceso
+    const progressSection = course.has_access && course.progress_percentage > 0 ? `
+      <div class="mt-3 mb-2">
+        <div class="flex items-center justify-between text-xs mb-1" style="color: var(--text-secondary);">
+          <span>Progreso</span>
+          <span>${course.progress_percentage}%</span>
+        </div>
+        <div class="w-full rounded-full h-2" style="background-color: var(--border-primary);">
+          <div class="h-2 rounded-full transition-all duration-300" style="width: ${course.progress_percentage}%; background-color: var(--accent);"></div>
+        </div>
+      </div>
+    ` : '';
+
+    return `
+      <div class="course-card rounded-lg shadow-md overflow-hidden transition-shadow cursor-pointer" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-primary);" onclick="window.location.href='/cursos/${course.id}'" onmouseover="this.style.boxShadow='var(--shadow-lg)';" onmouseout="this.style.boxShadow='var(--shadow-md)';">
+        <div class="aspect-video flex items-center justify-center" style="background: var(--gradient-primary);">
+          ${course.cover_image_url 
+            ? `<img src="${course.cover_image_url}" alt="${course.title}" class="w-full h-full object-cover">`
+            : `<div class="text-white text-4xl">📚</div>`
+          }
+        </div>
+        
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-3">
+            <h3 class="text-xl font-semibold leading-tight" style="color: var(--text-primary);">${course.title}</h3>
+            ${accessBadge}
+          </div>
+          
+          <p class="text-sm mb-4 line-clamp-2" style="color: var(--text-secondary);">
+            ${course.short_description || 'Sin descripción disponible'}
+          </p>
+          
+          ${progressSection}
+          
+          <div class="space-y-2 text-sm" style="color: var(--text-muted);">
+            <div class="flex items-center gap-2">
+              <span>👨‍🏫</span>
+              <span>${course.instructor_name}</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-1">
+                <span>📖</span>
+                <span>${course.lesson_count} lecciones</span>
+              </div>
+              
+              <div class="flex items-center gap-1">
+                <span>⏱️</span>
+                <span>${formatDuration(course.estimated_duration_hours)}</span>
+              </div>
+            </div>
+            
+            ${course.level ? `
+              <div class="flex items-center gap-1">
+                <span>📊</span>
+                <span>Nivel: ${course.level}</span>
+              </div>
+            ` : ''}
+            
+            ${course.category ? `
+              <div class="flex items-center gap-1">
+                <span>🏷️</span>
+                <span>${course.category}</span>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="mt-4 pt-4 flex justify-between items-center" style="border-top: 1px solid var(--border-primary);">
+            <span class="text-lg font-semibold" style="color: var(--text-primary);">
+              ${formatPrice(course.price, course.is_premium)}
+            </span>
+            
+            <button class="px-4 py-2 rounded-lg transition-colors text-sm font-medium" style="background-color: var(--accent); color: var(--text-inverse);" onmouseover="this.style.backgroundColor='var(--accent-hover)';" onmouseout="this.style.backgroundColor='var(--accent)';">
+              ${course.has_access ? (course.progress_percentage > 0 ? 'Continuar' : 'Comenzar') : 'Ver curso'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  let allCourses = [];
+  let filteredCourses = [];
+
+  function updateFilters() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const category = document.getElementById('category-filter').value;
+    const level = document.getElementById('level-filter').value;
+    const sort = document.getElementById('sort-filter').value;
+
+    filteredCourses = allCourses.filter(course => {
+      const matchesSearch = course.title.toLowerCase().includes(search);
+      const matchesCategory = !category || course.category === category;
+      const matchesLevel = !level || course.level === level;
+      return matchesSearch && matchesCategory && matchesLevel;
+    });
+
+    if (sort === 'price') {
+      filteredCourses.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (sort === 'duration') {
+      filteredCourses.sort((a, b) => (a.estimated_duration_hours || 0) - (b.estimated_duration_hours || 0));
+    } else if (sort === 'title') {
+      filteredCourses.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    renderCourses();
+  }
+
+  function renderCourses() {
+    if (filteredCourses.length === 0) {
+      coursesGridEl.classList.add('hidden');
+      noCoursesEl.classList.remove('hidden');
+      return;
+    }
+    noCoursesEl.classList.add('hidden');
+    coursesGridEl.innerHTML = filteredCourses.map(course => createCourseCard(course)).join('');
+    coursesGridEl.classList.remove('hidden');
+  }
+
+  async function loadCourses() {
+    try {
+      loadingEl.classList.remove('hidden');
+      errorEl.classList.add('hidden');
+      noCoursesEl.classList.add('hidden');
+      coursesGridEl.classList.add('hidden');
+      
+      // Debug: verificar estado de autenticación
+      try {
+        const debug = await api.debugCourses();
+        console.log('🔍 Debug autenticación:', debug);
+      } catch (debugError) {
+        console.log('❌ Error en debug:', debugError);
+      }
+      
+      // Primero intentar con cursos del usuario autenticado
+      let courses;
+      try {
+        // Intentar primero con el endpoint que incluye progreso para usuarios autenticados
+        courses = await api.getCoursesPublic();
+        console.log('🔍 Cursos recibidos desde API (público con progreso):', courses);
+      } catch (error) {
+        console.log('⚠️ Error obteniendo cursos con progreso, usando endpoint público básico');
+        // Si falla, usar endpoint básico (aunque esto no debería pasar)
+        courses = await api.getCoursesPublic();
+      }
+      
+      // Log específico para cursos con progreso
+      const coursesWithProgress = courses.filter(c => c.progress_percentage > 0);
+      console.log('🔍 Cursos con progreso:', coursesWithProgress);
+      
+      // Log específico para cursos con acceso
+      const coursesWithAccess = courses.filter(c => c.has_access);
+      console.log('🔍 Cursos con acceso:', coursesWithAccess);
+      
+      allCourses = courses;
+      filteredCourses = courses;
+
+      // Poblar filtros de categoría y nivel
+      const categories = Array.from(new Set(courses.map(c => c.category).filter(Boolean)));
+      const levels = Array.from(new Set(courses.map(c => c.level).filter(Boolean)));
+      const categoryFilter = document.getElementById('category-filter');
+      const levelFilter = document.getElementById('level-filter');
+      categoryFilter.innerHTML = '<option value="">Todas las categorías</option>' + categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+      levelFilter.innerHTML = '<option value="">Todos los niveles</option>' + levels.map(lvl => `<option value="${lvl}">${lvl}</option>`).join('');
+
+      updateFilters();
+      loadingEl.classList.add('hidden');
+    } catch (error) {
+      console.error('❌ Error cargando cursos:', error);
+      loadingEl.classList.add('hidden');
+      errorEl.classList.remove('hidden');
+    }
+  }
+
+  // Eventos de filtros
+  setTimeout(() => {
+    document.getElementById('search-input').addEventListener('input', updateFilters);
+    document.getElementById('category-filter').addEventListener('change', updateFilters);
+    document.getElementById('level-filter').addEventListener('change', updateFilters);
+    document.getElementById('sort-filter').addEventListener('change', updateFilters);
+  }, 500);
+
+  // Cargar cursos al inicializar la página
+  loadCourses();
+</script>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  #courses-grid > div {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  #courses-grid > div:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  /* Dark mode brand background for courses page */
+  :global([data-theme="dark"]) #courses-container,
+  :global(.dark) #courses-container {
+    background-color: #00012e !important;
+  }
+
+  /* Full-width brand background for /cursos in dark mode */
+  :global([data-theme="dark"]) .courses-page,
+  :global(.dark) .courses-page {
+    background-color: #00012e !important;
+  }
+
+  /* Improve readability: make secondary and muted text white on /cursos in dark mode */
+  :global([data-theme="dark"]) .courses-page,
+  :global(.dark) .courses-page {
+    --text-secondary: #ffffff;
+    --text-muted: #ffffff;
+    --text-inverse: #ffffff; /* ensure buttons text are white */
+  }
+
+  /* Dark mode brand look for course cards */
+  :global([data-theme="dark"]) .course-card,
+  :global(.dark) .course-card {
+    background-color: #00012e !important; /* match navbar brand dark */
+    border-color: #2a2a4e !important;     /* brand dark border */
+  }
+</style>

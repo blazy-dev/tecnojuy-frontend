@@ -1,0 +1,561 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Admin - Gestión Homepage">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h1 class="text-3xl font-bold mb-6 text-gray-800">Gestión de Homepage</h1>
+      
+      <!-- Hero Section Management -->
+      <div class="mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold text-gray-700">Hero Slider</h2>
+          <button 
+            id="add-hero-btn"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            + Agregar Slide
+          </button>
+        </div>
+
+        <!-- Hero Slides Grid -->
+        <div id="hero-slides-grid" class="grid gap-4">
+          <!-- Slides will be populated by JavaScript -->
+        </div>
+
+        <!-- Add Hero Form (Initially Hidden) -->
+        <div id="add-hero-form" class="mt-6 p-6 bg-gray-50 rounded-lg" style="display: none;">
+          <h3 class="text-lg font-semibold mb-4">Nuevo Slide del Hero</h3>
+          <form id="hero-form" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
+              <input 
+                type="text" 
+                name="title" 
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Título del slide"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+              <textarea 
+                name="description" 
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Descripción del slide"
+              ></textarea>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Texto del Botón</label>
+              <input 
+                type="text" 
+                name="button_text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Texto del botón (opcional)"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">URL del Botón</label>
+              <input 
+                type="url" 
+                name="button_url"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="https://ejemplo.com"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Imagen</label>
+              <input 
+                type="file" 
+                name="image" 
+                accept="image/*"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+              <div id="hero-image-preview" class="mt-2 text-sm text-gray-600"></div>
+            </div>
+            
+            <div class="flex gap-4">
+              <button 
+                type="submit" 
+                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Agregar Slide
+              </button>
+              <button 
+                type="button" 
+                id="cancel-hero-btn"
+                class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Edit Hero Form (Initially Hidden) -->
+        <div id="edit-hero-form" class="mt-6 p-6 bg-blue-50 rounded-lg" style="display: none;">
+          <h3 class="text-lg font-semibold mb-4">Editar Slide del Hero</h3>
+          <form id="hero-edit-form" class="space-y-4">
+            <input type="hidden" name="slide_id" id="edit-slide-id">
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
+              <input 
+                type="text" 
+                name="title" 
+                id="edit-title"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Título del slide"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+              <textarea 
+                name="description" 
+                id="edit-description"
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Descripción del slide"
+              ></textarea>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Texto del Botón</label>
+              <input 
+                type="text" 
+                name="button_text"
+                id="edit-button-text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Texto del botón (opcional)"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">URL del Botón</label>
+              <input 
+                type="url" 
+                name="button_url"
+                id="edit-button-url"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="https://ejemplo.com"
+              >
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Cambiar Imagen (opcional)</label>
+              <input 
+                type="file" 
+                name="image" 
+                accept="image/*"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+              <div id="edit-image-preview" class="mt-2 text-sm text-gray-600"></div>
+              <div id="current-image" class="mt-2"></div>
+            </div>
+            
+            <div class="flex gap-4">
+              <button 
+                type="submit" 
+                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Actualizar Slide
+              </button>
+              <button 
+                type="button" 
+                id="cancel-edit-btn"
+                class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { api } from '../../lib/api';
+
+  let currentContent: any[] = [];
+
+  // Load homepage data
+  async function loadHomepageData() {
+    try {
+      const response = await api.getHomepageData();
+      if (response.content) {
+        currentContent = response.content;
+        populateHeroSlides();
+      }
+    } catch (error) {
+      console.error('Error loading homepage data:', error);
+    }
+  }
+
+  // Populate hero slides
+  function populateHeroSlides() {
+    const heroGrid = document.getElementById('hero-slides-grid');
+    if (!heroGrid) return;
+
+    const heroSlides = currentContent
+      .filter(item => item.section === 'hero')
+      .sort((a, b) => a.order_index - b.order_index);
+
+    heroGrid.innerHTML = '';
+
+    heroSlides.forEach((slide, index) => {
+      const slideDiv = document.createElement('div');
+      slideDiv.className = 'bg-white border rounded-lg p-4 shadow-sm';
+      slideDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex items-center gap-2">
+            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
+              Slide ${index + 1}
+            </span>
+            <span class="text-xs text-gray-500">Orden: ${slide.order_index}</span>
+          </div>
+          <div class="flex gap-2">
+            ${index > 0 ? `<button onclick="moveSlide(${slide.id}, 'up')" class="text-blue-600 hover:text-blue-800 text-sm">↑</button>` : ''}
+            ${index < heroSlides.length - 1 ? `<button onclick="moveSlide(${slide.id}, 'down')" class="text-blue-600 hover:text-blue-800 text-sm">↓</button>` : ''}
+            <button onclick="editSlide(${slide.id})" class="text-yellow-600 hover:text-yellow-800 text-sm">✏️</button>
+            <button onclick="deleteSlide(${slide.id})" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
+          </div>
+        </div>
+        <h4 class="font-semibold text-gray-800">${slide.title || 'Sin título'}</h4>
+        <p class="text-gray-600 text-sm mt-1">${slide.description || 'Sin descripción'}</p>
+        ${slide.image_url ? `<img src="${slide.image_url}" alt="${slide.title}" class="mt-2 w-full h-32 object-cover rounded">` : ''}
+        ${slide.button_text ? `<div class="mt-2"><span class="inline-block bg-blue-600 text-white px-3 py-1 rounded text-xs">${slide.button_text}</span></div>` : ''}
+      `;
+      heroGrid.appendChild(slideDiv);
+    });
+  }
+
+  // Add new hero slide button
+  function addNewHeroSlide() {
+    const form = document.getElementById('add-hero-form');
+    if (form) {
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+  }
+
+  // Cancel add hero form
+  function cancelAddHero() {
+    const form = document.getElementById('add-hero-form');
+    const heroForm = document.getElementById('hero-form') as HTMLFormElement;
+    if (form && heroForm) {
+      form.style.display = 'none';
+      heroForm.reset();
+    }
+  }
+
+  // Handle hero form submission
+  async function handleHeroFormSubmit(e: Event) {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    
+    try {
+      let imageUrl = '';
+      const imageFile = formData.get('image') as File;
+      
+      if (imageFile && imageFile.size > 0) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', imageFile);
+        
+        const uploadResponse = await api.uploadImage(uploadFormData);
+        imageUrl = uploadResponse.url;
+      }
+      
+      const heroData = {
+        section: 'hero',
+        title: formData.get('title'),
+        description: formData.get('description'),
+        button_text: formData.get('button_text'),
+        button_url: formData.get('button_url'),
+        image_url: imageUrl,
+        order_index: getCurrentOrderIndex('hero'),
+        is_active: true
+      };
+      
+      await api.createHomepageContent(heroData);
+      alert('¡Slide del hero agregado correctamente!');
+      
+      // Reset form and hide
+      form.reset();
+      const addForm = document.getElementById('add-hero-form');
+      if (addForm) addForm.style.display = 'none';
+      
+      // Reload data
+      await loadHomepageData();
+      
+    } catch (error) {
+      console.error('Error creating hero slide:', error);
+      alert('Error al crear el slide. Intenta nuevamente.');
+    }
+  }
+
+  // Edit slide (placeholder)
+  function editSlide(slideId: number) {
+    const slide = currentContent.find(c => c.id === slideId);
+    if (!slide) return;
+
+    // Hide add form if open
+    const addForm = document.getElementById('add-hero-form');
+    if (addForm) addForm.style.display = 'none';
+
+    // Show edit form
+    const editForm = document.getElementById('edit-hero-form');
+    if (editForm) editForm.style.display = 'block';
+
+    // Populate form with current values
+    const slideIdInput = document.getElementById('edit-slide-id') as HTMLInputElement;
+    const titleInput = document.getElementById('edit-title') as HTMLInputElement;
+    const descriptionInput = document.getElementById('edit-description') as HTMLTextAreaElement;
+    const buttonTextInput = document.getElementById('edit-button-text') as HTMLInputElement;
+    const buttonUrlInput = document.getElementById('edit-button-url') as HTMLInputElement;
+    const currentImageDiv = document.getElementById('current-image');
+
+    if (slideIdInput) slideIdInput.value = slideId.toString();
+    if (titleInput) titleInput.value = slide.title || '';
+    if (descriptionInput) descriptionInput.value = slide.description || '';
+    if (buttonTextInput) buttonTextInput.value = slide.button_text || '';
+    if (buttonUrlInput) buttonUrlInput.value = slide.button_url || '';
+    
+    if (currentImageDiv && slide.image_url) {
+      currentImageDiv.innerHTML = `
+        <p class="text-sm text-gray-600 mb-2">Imagen actual:</p>
+        <img src="${slide.image_url}" alt="${slide.title}" class="w-32 h-20 object-cover rounded border">
+      `;
+    } else if (currentImageDiv) {
+      currentImageDiv.innerHTML = '<p class="text-sm text-gray-500">Sin imagen actual</p>';
+    }
+
+    // Scroll to form
+    editForm.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Cancel edit hero form
+  function cancelEditHero() {
+    const form = document.getElementById('edit-hero-form');
+    const heroEditForm = document.getElementById('hero-edit-form') as HTMLFormElement;
+    if (form && heroEditForm) {
+      form.style.display = 'none';
+      heroEditForm.reset();
+      const currentImageDiv = document.getElementById('current-image');
+      if (currentImageDiv) currentImageDiv.innerHTML = '';
+    }
+  }
+
+  // Handle hero edit form submission
+  async function handleHeroEditFormSubmit(e: Event) {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    
+    try {
+      const slideId = parseInt(formData.get('slide_id') as string);
+      const slide = currentContent.find(c => c.id === slideId);
+      if (!slide) {
+        alert('Error: Slide no encontrado');
+        return;
+      }
+
+      let imageUrl = slide.image_url; // Keep current image by default
+      const imageFile = formData.get('image') as File;
+      
+      // Only upload new image if one was selected
+      if (imageFile && imageFile.size > 0) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', imageFile);
+        
+        const uploadResponse = await api.uploadImage(uploadFormData);
+        imageUrl = uploadResponse.url;
+      }
+      
+      const heroData = {
+        section: 'hero',
+        title: formData.get('title'),
+        description: formData.get('description'),
+        button_text: formData.get('button_text'),
+        button_url: formData.get('button_url'),
+        image_url: imageUrl,
+        order_index: slide.order_index, // Keep current order
+        is_active: true
+      };
+      
+      await api.updateHomepageContent(slideId, heroData);
+      alert('¡Slide actualizado correctamente!');
+      
+      // Reset form and hide
+      form.reset();
+      const editForm = document.getElementById('edit-hero-form');
+      if (editForm) editForm.style.display = 'none';
+      
+      // Reload data
+      await loadHomepageData();
+      
+    } catch (error) {
+      console.error('Error updating hero slide:', error);
+      alert('Error al actualizar el slide. Intenta nuevamente.');
+    }
+  }
+
+  // Update slide
+  async function updateSlide(slideId: number, updates: any) {
+    try {
+      const slide = currentContent.find(c => c.id === slideId);
+      if (slide) {
+        const updatedSlide = { ...slide, ...updates };
+        await api.updateHomepageContent(slideId, updatedSlide);
+        await loadHomepageData();
+        alert('Slide actualizado correctamente!');
+      }
+    } catch (error) {
+      console.error('Error updating slide:', error);
+      alert('Error al actualizar el slide. Intenta nuevamente.');
+    }
+  }
+
+  // Delete slide
+  async function deleteSlide(slideId: number) {
+    if (confirm('¿Estás seguro de que deseas eliminar este slide?')) {
+      try {
+        await api.deleteHomepageContent(slideId);
+        await loadHomepageData();
+        alert('Slide eliminado correctamente!');
+      } catch (error) {
+        console.error('Error deleting slide:', error);
+        alert('Error al eliminar el slide. Intenta nuevamente.');
+      }
+    }
+  }
+
+  // Move slide up or down
+  async function moveSlide(slideId: number, direction: 'up' | 'down') {
+    try {
+      const heroSlides = currentContent
+        .filter(item => item.section === 'hero')
+        .sort((a, b) => a.order_index - b.order_index);
+      
+      const currentIndex = heroSlides.findIndex(slide => slide.id === slideId);
+      if (currentIndex === -1) return;
+      
+      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= heroSlides.length) return;
+      
+      // Swap order_index values
+      const currentSlide = heroSlides[currentIndex];
+      const targetSlide = heroSlides[targetIndex];
+      
+      await api.updateHomepageContent(currentSlide.id, {
+        ...currentSlide,
+        order_index: targetSlide.order_index
+      });
+      
+      await api.updateHomepageContent(targetSlide.id, {
+        ...targetSlide,
+        order_index: currentSlide.order_index
+      });
+      
+      await loadHomepageData();
+      
+    } catch (error) {
+      console.error('Error moving slide:', error);
+      alert('Error al mover el slide. Intenta nuevamente.');
+    }
+  }
+
+  // Get current order index for section
+  function getCurrentOrderIndex(section: string, slideId?: number): number {
+    const sectionContent = currentContent.filter(c => c.section === section);
+    if (slideId) {
+      const content = sectionContent.find(c => c.id === slideId);
+      return content?.order_index || 0;
+    }
+    return sectionContent.length;
+  }
+
+  // Make functions global for onclick handlers
+  (window as any).deleteSlide = deleteSlide;
+  (window as any).moveSlide = moveSlide;
+  (window as any).editSlide = editSlide;
+
+  // Handle image file selection
+  function handleImageSelection(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    const preview = document.getElementById('hero-image-preview');
+    
+    if (file && preview) {
+      preview.textContent = `Imagen seleccionada: ${file.name}`;
+    }
+  }
+
+  // Handle edit image file selection
+  function handleEditImageSelection(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    const preview = document.getElementById('edit-image-preview');
+    
+    if (file && preview) {
+      preview.textContent = `Nueva imagen seleccionada: ${file.name}`;
+    }
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    // Add event listeners
+    const addHeroBtn = document.getElementById('add-hero-btn');
+    if (addHeroBtn) {
+      addHeroBtn.addEventListener('click', addNewHeroSlide);
+    }
+    
+    const cancelHeroBtn = document.getElementById('cancel-hero-btn');
+    if (cancelHeroBtn) {
+      cancelHeroBtn.addEventListener('click', cancelAddHero);
+    }
+    
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    if (cancelEditBtn) {
+      cancelEditBtn.addEventListener('click', cancelEditHero);
+    }
+    
+    const heroForm = document.getElementById('hero-form');
+    if (heroForm) {
+      heroForm.addEventListener('submit', handleHeroFormSubmit);
+    }
+    
+    const heroEditForm = document.getElementById('hero-edit-form');
+    if (heroEditForm) {
+      heroEditForm.addEventListener('submit', handleHeroEditFormSubmit);
+    }
+    
+    const imageInput = heroForm?.querySelector('input[name="image"]');
+    if (imageInput) {
+      imageInput.addEventListener('change', handleImageSelection);
+    }
+
+    const editImageInput = heroEditForm?.querySelector('input[name="image"]');
+    if (editImageInput) {
+      editImageInput.addEventListener('change', (e) => handleEditImageSelection(e));
+    }
+
+    // Load initial data
+    loadHomepageData();
+  });
+</script>
+
+<style>
+  .container {
+    min-height: 100vh;
+  }
+</style>

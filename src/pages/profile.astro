@@ -1,0 +1,12 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Navbar from '@/components/Navbar.astro';
+import Profile from '@/components/Profile';
+
+export const prerender = false;
+---
+
+<Layout title="Mi Perfil - TecnoJuy" description="Gestiona tu perfil de usuario en TecnoJuy">
+  <Navbar />
+  <Profile client:load />
+</Layout>
