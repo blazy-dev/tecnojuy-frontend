@@ -2,6 +2,8 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
 
+// Nota: Para Cloudflare Pages (estático) no se necesita SSR ni adapter, por eso usamos output: 'static'.
+// Si más adelante quieres SSR en Cloudflare Workers, instala '@astrojs/cloudflare' y vuelve a 'output: "hybrid"' o elimina esa clave y configura el adapter.
 export default defineConfig({
   integrations: [
     react(),
@@ -9,7 +11,7 @@ export default defineConfig({
       applyBaseStyles: false
     })
   ],
-  output: 'hybrid',
+  output: 'static',
   server: {
     port: 4321,
     host: true
