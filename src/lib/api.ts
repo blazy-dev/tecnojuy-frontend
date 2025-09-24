@@ -7,6 +7,14 @@ class ApiClient {
       'Content-Type': 'application/json',
     });
     
+    // Añadir token de autenticación si está disponible
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('access_token');
+      if (accessToken) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
+      }
+    }
+    
     return headers;
   }
 

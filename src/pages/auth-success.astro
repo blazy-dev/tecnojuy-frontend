@@ -1,0 +1,53 @@
+---
+// Esta página captura los tokens del OAuth callback y los almacena
+---
+
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Autenticación exitosa - TecnoJuy</title>
+</head>
+<body>
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif;">
+        <div>
+            <h2>Autenticando...</h2>
+            <p>Redirigiendo al dashboard...</p>
+        </div>
+    </div>
+
+    <script>
+        // Extraer tokens de los query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const accessToken = urlParams.get('access_token');
+        const refreshToken = urlParams.get('refresh_token');
+
+        console.log('[auth-success] Processing tokens...');
+        console.log('[auth-success] Access token present:', !!accessToken);
+        console.log('[auth-success] Refresh token present:', !!refreshToken);
+
+        if (accessToken && refreshToken) {
+            // Almacenar tokens en localStorage para que el AuthContext los pueda usar
+            localStorage.setItem('access_token', accessToken);
+            localStorage.setItem('refresh_token', refreshToken);
+            
+            console.log('[auth-success] Tokens stored, redirecting to dashboard');
+            
+            // Limpiar la URL para no dejar tokens en el historial
+            window.history.replaceState({}, document.title, '/auth-success');
+            
+            // Redirigir al dashboard
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 1000);
+        } else {
+            console.error('[auth-success] No tokens found in URL');
+            // Redirigir al login con error
+            setTimeout(() => {
+                window.location.href = '/login?error=no_tokens';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

@@ -33,7 +33,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await api.logout();
       setUser(null);
       
-      // Limpiar localStorage y sessionStorage
+      // Limpiar localStorage, sessionStorage y tokens
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       localStorage.clear();
       sessionStorage.clear();
       
@@ -43,6 +45,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Error during logout:', error);
       // En caso de error, limpiar el estado local de todas formas
       setUser(null);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       localStorage.clear();
       sessionStorage.clear();
       window.location.href = '/';
@@ -62,10 +66,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const checkAuth = async () => {
     const debug = (window as any).__AUTH_DEBUG__ || true; // Temporalmente siempre activo
     const log = (...args: any[]) => { if (debug) console.log('[auth]', ...args); };
+    
     try {
       setLoading(true);
-      log('Checking session (non intrusive)...');
-      const sessionResp = await fetch(getApiUrl('/auth/session'), { credentials: 'include' });
+      log('Checking session...');
+      
+      // Intentar obtener token de localStorage primero
+      const accessToken = localStorage.getItem('access_token');
+      log('Access token from localStorage:', !!accessToken);
+      
+      // Crear headers para la petición
+      const headers: Record<string, string> = {};
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+      
+      // Intentar /auth/session con token en header o cookies
+      const sessionResp = await fetch(getApiUrl('/auth/session'), { 
+        credentials: 'include',  // Para cookies legacy
+        headers 
+      });
+      
       if (sessionResp.status === 404) {
         log('Session endpoint 404 -> falling back to legacy /auth/me flow');
         try {
@@ -74,29 +95,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
           log('Legacy /auth/me success');
         } catch (primaryErr: any) {
           log('Legacy /auth/me failed:', primaryErr?.message);
-          const hasRefresh = typeof document !== 'undefined' && document.cookie.includes('refresh_token=');
-          if (hasRefresh) {
-            try {
-              await api.refreshToken();
-              const userData = await api.getCurrentUser();
-              setUser(userData);
-              log('Legacy refresh succeeded');
-            } catch (refreshErr) {
-              log('Legacy refresh failed:', (refreshErr as any)?.message);
-              setUser(null);
-            }
-          } else {
-            setUser(null);
-          }
+          // Limpiar tokens inválidos
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          setUser(null);
         }
         return;
       }
+      
       const sessionData = await sessionResp.json().catch(() => ({}));
       if (sessionData.authenticated && sessionData.user) {
         setUser(sessionData.user);
         log('Session OK as', sessionData.user.email);
       } else {
         log('Session reports anonymous');
+        // Si tenemos token pero el servidor dice que no estamos autenticados, limpiar tokens
+        if (accessToken) {
+          log('Cleaning invalid tokens');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+        }
         setUser(null);
       }
     } catch (e) {
