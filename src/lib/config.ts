@@ -59,14 +59,34 @@ export const getApiUrl = (endpoint: string) => {
   const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
   // En desarrollo usar proxy
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    console.log(`🏠 DEV API URL: /api${ep}`);
-    return `/api${ep}`;
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    const devUrl = `/api${ep}`;
+    console.log(`🏠 DEV API URL: ${devUrl}`);
+    return devUrl;
   }
-  
-  // En producción usar HTTPS directo
-  console.log(`� PROD API URL: ${base}${ep}`); // Debug log
-  return `${base}${ep}`;
+
+  // Construir URL completa (si por algún motivo llega en http la forzamos a https)
+  let fullUrl = `${base}${ep}`;
+
+  if (fullUrl.startsWith('http://')) {
+    console.warn('⚠️ Detected insecure URL being upgraded to HTTPS:', fullUrl);
+    fullUrl = fullUrl.replace('http://', 'https://');
+  }
+
+  // Defensa adicional: si algun código externo pasó ya una URL completa en endpoint
+  if (/^http:\/\//i.test(ep)) {
+    console.warn('⚠️ Endpoint contenía http://, se fuerza a https');
+    fullUrl = ep.replace(/^http:\/\//i, 'https://');
+  } else if (/^https?:\/\//i.test(ep)) {
+    // Si endpoint ya era URL absoluta https lo respetamos
+    fullUrl = ep;
+  }
+
+  // Normalizar doble slash accidental
+  fullUrl = fullUrl.replace('https://backend-tecnojuy2-production.up.railway.app//', 'https://backend-tecnojuy2-production.up.railway.app/');
+
+  console.log(`🚀 FINAL API URL (ENFORCED HTTPS): ${fullUrl}`);
+  return fullUrl;
 };
 
 
