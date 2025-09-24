@@ -424,6 +424,14 @@ class ApiClient {
           const xhr = new XMLHttpRequest();
           xhr.open('POST', getApiUrl('/storage/proxy-upload'));
           xhr.withCredentials = true;
+          
+          // Añadir token de autorización si está disponible
+          if (typeof window !== 'undefined') {
+            const accessToken = localStorage.getItem('access_token');
+            if (accessToken) {
+              xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+            }
+          }
 
           xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
@@ -452,6 +460,15 @@ class ApiClient {
                 const xhr2 = new XMLHttpRequest();
                 xhr2.open('POST', getApiUrl('/storage/proxy-upload'));
                 xhr2.withCredentials = true;
+                
+                // Añadir token de autorización para el retry también
+                if (typeof window !== 'undefined') {
+                  const accessToken = localStorage.getItem('access_token');
+                  if (accessToken) {
+                    xhr2.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+                  }
+                }
+                
                 xhr2.upload.onprogress = xhr.upload.onprogress;
                 xhr2.onload = () => {
                   if (xhr2.status >= 200 && xhr2.status < 300) {
@@ -486,9 +503,19 @@ class ApiClient {
     }
 
     // Fallback: no progress, use fetch
+    // Preparar headers para FormData
+    const headers = new Headers();
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('access_token');
+      if (accessToken) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
+      }
+    }
+    
     let response = await fetch(getApiUrl('/storage/proxy-upload'), {
       method: 'POST',
       credentials: 'include',
+      headers,
       body: formData
     });
     if (response.status === 401) {
@@ -496,6 +523,7 @@ class ApiClient {
       response = await fetch(getApiUrl('/storage/proxy-upload'), {
         method: 'POST',
         credentials: 'include',
+        headers,
         body: formData
       });
     }
@@ -667,9 +695,21 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
     
+    // Para FormData, no podemos usar el headers normal porque incluye Content-Type
+    const headers = new Headers();
+    
+    // Añadir token de autenticación si está disponible
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('access_token');
+      if (accessToken) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
+      }
+    }
+    
     const response = await fetch(getApiUrl('/homepage/admin/upload-image'), {
       method: 'POST',
       credentials: 'include',
+      headers,
       body: formData
     });
     return this.handleResponse<any>(response);
@@ -926,6 +966,14 @@ class ApiClient {
   async uploadImage(formData: FormData): Promise<{ url: string }> {
     const headers = new Headers();
     // Don't set Content-Type header for FormData, let browser set it with boundary
+    
+    // Añadir token de autenticación si está disponible
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('access_token');
+      if (accessToken) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
+      }
+    }
     
     const response = await fetch(getApiUrl('/homepage/admin/upload-image'), {
       method: 'POST',
