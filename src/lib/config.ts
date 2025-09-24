@@ -17,17 +17,17 @@ export const config = {
     },
     users: {
       profile: '/users/me',
-      list: '/users',
+      list: '/users/',
       roles: '/users/roles'
     },
     posts: {
-      list: '/posts',
-      detail: (id: number) => `/posts/${id}`,
-      create: '/posts',
-      update: (id: number) => `/posts/${id}`,
-      delete: (id: number) => `/posts/${id}`,
-      adminList: '/posts/admin/all',
-      adminDetail: (id: number) => `/posts/admin/${id}`
+      list: '/posts/',
+      detail: (id: number) => `/posts/${id}/`,
+      create: '/posts/',
+      update: (id: number) => `/posts/${id}/`,
+      delete: (id: number) => `/posts/${id}/`,
+      adminList: '/posts/admin/all/',
+      adminDetail: (id: number) => `/posts/admin/${id}/`
     },
     storage: {
       uploadUrl: '/storage/upload-url',
