@@ -53,8 +53,8 @@ export const config = {
 };
 
 export const getApiUrl = (endpoint: string) => {
-  // Normalizar base y endpoint para evitar // que rompe rutas en FastAPI
-  const base = (config.apiUrl || '').replace(/\/+$/,'');
+  // TEMPORAL: Forzar HTTPS para solucionar Mixed Content
+  const base = 'https://backend-tecnojuy2-production.up.railway.app';
   const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
   // Proxy en desarrollo (localhost) para pasar cookies
