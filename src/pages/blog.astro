@@ -33,14 +33,17 @@ export const prerender = false;
   params.set('sort_by', currentParams.get('sort_by') || 'published_at');
   params.set('sort_order', currentParams.get('sort_order') || 'desc');
   if (currentCategoryId) params.set('category_id', String(currentCategoryId));
-  const response = await fetch(`/api/blog/posts?${params.toString()}`);
+  
+  // Usar el API del backend directamente
+  const apiUrl = 'https://backend-tecnojuy2-production.up.railway.app';
+  const response = await fetch(`${apiUrl}/blog/posts?${params.toString()}`);
       if (!response.ok) throw new Error('Error cargando posts');
       
       const data = await response.json();
       const posts = data.posts || [];
 
       // Cargar categorías
-      const categoriesResponse = await fetch('/api/blog/categories');
+      const categoriesResponse = await fetch(`${apiUrl}/blog/categories`);
       const categories = categoriesResponse.ok ? await categoriesResponse.json() : [];
 
       // Render del blog

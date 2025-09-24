@@ -30,7 +30,8 @@ export const prerender = false;
 
     try {
       // Cargar el post
-      const response = await fetch(`/api/blog/posts/${slug}`);
+      const apiUrl = 'https://backend-tecnojuy2-production.up.railway.app';
+      const response = await fetch(`${apiUrl}/blog/posts/${slug}`);
       if (!response.ok) {
         throw new Error(response.status === 404 ? 'Post no encontrado' : 'Error cargando post');
       }
