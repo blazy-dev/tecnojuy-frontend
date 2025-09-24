@@ -64,7 +64,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const checkAuth = async () => {
-    const debug = (window as any).__AUTH_DEBUG__ || true; // Temporalmente siempre activo
+    const debug = (window as any).__AUTH_DEBUG__ || false; // Deshabilitar debug por defecto
     const log = (...args: any[]) => { if (debug) console.log('[auth]', ...args); };
     
     try {
