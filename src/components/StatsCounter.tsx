@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { getApiUrl } from '../lib/config';
 
 export default function StatsCounter() {
   const [coursesCount, setCoursesCount] = useState(0);
@@ -14,7 +15,7 @@ export default function StatsCounter() {
         setCoursesCount(coursesResponse.length);
 
         // Cargar número de usuarios registrados desde el nuevo endpoint público
-        const usersResponse = await fetch('http://127.0.0.1:8000/homepage/users-count');
+  const usersResponse = await fetch(getApiUrl('/homepage/users-count'));
         if (usersResponse.ok) {
           const userData = await usersResponse.json();
           setUsersCount(userData.count || 0);
