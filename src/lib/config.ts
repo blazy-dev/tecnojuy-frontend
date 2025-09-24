@@ -54,17 +54,18 @@ export const config = {
 };
 
 export const getApiUrl = (endpoint: string) => {
-  // TEMPORAL: Forzar HTTPS para solucionar Mixed Content
+  // TEMPORAL: Forzar HTTPS para solucionar Mixed Content (v2024-09-24)
   const base = 'https://backend-tecnojuy2-production.up.railway.app';
   const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
   // En desarrollo usar proxy
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    console.log(`🏠 DEV API URL: /api${ep}`);
     return `/api${ep}`;
   }
   
   // En producción usar HTTPS directo
-  console.log(`🔗 API URL: ${base}${ep}`); // Debug log
+  console.log(`� PROD API URL: ${base}${ep}`); // Debug log
   return `${base}${ep}`;
 };
 
