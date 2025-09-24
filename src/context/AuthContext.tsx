@@ -60,19 +60,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const checkAuth = async () => {
+    const debug = (window as any).__AUTH_DEBUG__;
+    const log = (...args: any[]) => { if (debug) console.log('[auth]', ...args); };
     try {
       setLoading(true);
+      log('Checking auth...');
       const userData = await api.getCurrentUser();
       setUser(userData);
-    } catch (error) {
-      // Si el token ha expirado, intentar renovarlo
-      try {
-        await api.refreshToken();
-        const userData = await api.getCurrentUser();
-        setUser(userData);
-      } catch (refreshError) {
-        console.error('Auth check failed:', refreshError);
+      log('Authenticated as', userData.email);
+    } catch (error: any) {
+      log('Primary /auth/me failed:', error?.message);
+      const hasRefresh = typeof document !== 'undefined' && document.cookie.includes('refresh_token=');
+      if (!hasRefresh) {
+        // No hay cookies todavía (usuario anónimo o primera visita)
+        log('No refresh token present; treating as anonymous');
         setUser(null);
+      } else {
+        // Intentar un único refresh
+        try {
+          log('Attempting token refresh...');
+            await api.refreshToken();
+            const userData = await api.getCurrentUser();
+            setUser(userData);
+            log('Refresh succeeded');
+        } catch (refreshError) {
+          log('Refresh failed:', refreshError);
+          setUser(null);
+        }
       }
     } finally {
       setLoading(false);
@@ -80,7 +94,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   useEffect(() => {
-    checkAuth();
+    // Pequeño defer para asegurar que cookies post-redirect estén disponibles
+    const t = setTimeout(() => { checkAuth(); }, 50);
+    return () => clearTimeout(t);
   }, []);
 
   const isAdmin = user?.role_name === 'admin';
