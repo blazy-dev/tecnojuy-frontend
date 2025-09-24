@@ -39,22 +39,67 @@ const { title, description = "TecnoJuy - Plataforma educativa moderna" } = Astro
     <title>{title}</title>
 
     <script>
-      // Script para forzar la anulación de registro de Service Workers
-      // Esto es para solucionar el problema de "SW zombie" que causa Mixed Content.
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          if (registrations.length > 0) {
-            console.log(`🧹 Encontrados ${registrations.length} Service Workers. Anulando...`);
-            for (const registration of registrations) {
-              registration.unregister().then((unregistered) => {
-                if (unregistered) {
-                  console.log(`✅ SW anulado para scope: ${registration.scope}. Recargando...`);
-                  window.location.reload();
-                }
-              });
-            }
+      // SCRIPT DE LIMPIEZA AGRESIVA PARA MIXED CONTENT
+      // Este script realiza una limpieza completa del navegador
+      
+      const FORCE_CLEANUP = true; // Activar limpieza forzada
+      const CLEANUP_VERSION = '2024-09-24-v2'; // Incrementar para forzar nueva limpieza
+      
+      if (FORCE_CLEANUP && typeof window !== 'undefined') {
+        console.log('🧹 INICIANDO LIMPIEZA AGRESIVA DEL NAVEGADOR...');
+        
+        // 1. Verificar si ya se hizo la limpieza
+        const lastCleanup = localStorage.getItem('sw_cleanup_version');
+        if (lastCleanup !== CLEANUP_VERSION) {
+          console.log('🔥 Versión de limpieza nueva detectada. Ejecutando limpieza completa...');
+          
+          // 2. Limpiar Service Workers
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+              if (registrations.length > 0) {
+                console.log(`🧹 Eliminando ${registrations.length} Service Workers...`);
+                registrations.forEach(reg => {
+                  reg.unregister().then(() => {
+                    console.log(`✅ SW eliminado: ${reg.scope}`);
+                  });
+                });
+              }
+            });
           }
-        });
+          
+          // 3. Limpiar todos los caches de la API Cache
+          if ('caches' in window) {
+            caches.keys().then(cacheNames => {
+              console.log(`🧹 Eliminando ${cacheNames.length} caches...`);
+              cacheNames.forEach(cacheName => {
+                caches.delete(cacheName).then(() => {
+                  console.log(`✅ Cache eliminado: ${cacheName}`);
+                });
+              });
+            });
+          }
+          
+          // 4. Limpiar localStorage y sessionStorage
+          try {
+            console.log('🧹 Limpiando storage local...');
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // 5. Marcar que se hizo la limpieza
+            localStorage.setItem('sw_cleanup_version', CLEANUP_VERSION);
+            
+            // 6. Forzar recarga completa después de un breve delay
+            setTimeout(() => {
+              console.log('🔄 FORZANDO RECARGA COMPLETA...');
+              window.location.reload(true); // Hard reload
+            }, 1000);
+            
+          } catch (e) {
+            console.error('❌ Error durante la limpieza:', e);
+          }
+        } else {
+          console.log('✅ Limpieza ya realizada para esta versión.');
+        }
       }
     </script>
   </head>
