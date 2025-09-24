@@ -43,7 +43,7 @@ const { title, description = "TecnoJuy - Plataforma educativa moderna" } = Astro
       // Este script realiza una limpieza completa del navegador
       
       const FORCE_CLEANUP = true; // Activar limpieza forzada
-      const CLEANUP_VERSION = '2024-09-24-v2'; // Incrementar para forzar nueva limpieza
+      const CLEANUP_VERSION = '2024-09-24-v3'; // Incrementar para forzar nueva limpieza
       
       if (FORCE_CLEANUP && typeof window !== 'undefined') {
         console.log('🧹 INICIANDO LIMPIEZA AGRESIVA DEL NAVEGADOR...');
@@ -100,6 +100,28 @@ const { title, description = "TecnoJuy - Plataforma educativa moderna" } = Astro
         } else {
           console.log('✅ Limpieza ya realizada para esta versión.');
         }
+      }
+      
+      // INTERCEPTOR DE FETCH PARA FORZAR HTTPS
+      // Este código "hackea" la función fetch del navegador para forzar HTTPS
+      if (typeof window !== 'undefined' && window.fetch) {
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+          let [resource, config] = args;
+          
+          // Si el primer argumento es una string URL, verificar y corregir
+          if (typeof resource === 'string') {
+            if (resource.startsWith('http://backend-tecnojuy2-production.up.railway.app')) {
+              const correctedUrl = resource.replace('http://', 'https://');
+              console.log(`🔒 FETCH INTERCEPTADO Y CORREGIDO: ${resource} -> ${correctedUrl}`);
+              resource = correctedUrl;
+            }
+          }
+          
+          // Llamar al fetch original con la URL corregida
+          return originalFetch.call(this, resource, config);
+        };
+        console.log('🔒 Interceptor de FETCH instalado para forzar HTTPS');
       }
     </script>
   </head>
