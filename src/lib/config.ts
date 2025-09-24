@@ -54,38 +54,30 @@ export const config = {
 };
 
 export const getApiUrl = (endpoint: string) => {
-  // TEMPORAL: Forzar HTTPS para solucionar Mixed Content (v2024-09-24)
-  const base = 'https://backend-tecnojuy2-production.up.railway.app';
+  // La base de la API se inyecta en el build via Vite `define`
+  const base = typeof __API_URL__ !== 'undefined' ? __API_URL__ : 'https://backend-tecnojuy2-production.up.railway.app';
   const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
-  // En desarrollo usar proxy
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  // En desarrollo, el proxy de Vite se encarga de todo
+  if (import.meta.env.DEV) {
     const devUrl = `/api${ep}`;
-    console.log(`🏠 DEV API URL: ${devUrl}`);
+    console.log(`🏠 DEV API URL (via proxy): ${devUrl}`);
     return devUrl;
   }
 
-  // Construir URL completa (si por algún motivo llega en http la forzamos a https)
+  // En producción, construir la URL completa y forzar HTTPS
   let fullUrl = `${base}${ep}`;
 
+  // Forzar HTTPS si por alguna razón la base es http
   if (fullUrl.startsWith('http://')) {
-    console.warn('⚠️ Detected insecure URL being upgraded to HTTPS:', fullUrl);
+    console.warn('⚠️ URL insegura detectada, forzando a HTTPS:', fullUrl);
     fullUrl = fullUrl.replace('http://', 'https://');
   }
-
-  // Defensa adicional: si algun código externo pasó ya una URL completa en endpoint
-  if (/^http:\/\//i.test(ep)) {
-    console.warn('⚠️ Endpoint contenía http://, se fuerza a https');
-    fullUrl = ep.replace(/^http:\/\//i, 'https://');
-  } else if (/^https?:\/\//i.test(ep)) {
-    // Si endpoint ya era URL absoluta https lo respetamos
-    fullUrl = ep;
-  }
-
+  
   // Normalizar doble slash accidental
-  fullUrl = fullUrl.replace('https://backend-tecnojuy2-production.up.railway.app//', 'https://backend-tecnojuy2-production.up.railway.app/');
+  fullUrl = fullUrl.replace(/([^:]\/)\/+/g, '$1');
 
-  console.log(`🚀 FINAL API URL (ENFORCED HTTPS): ${fullUrl}`);
+  console.log(`🚀 PROD API URL (from build variable): ${fullUrl}`);
   return fullUrl;
 };
 

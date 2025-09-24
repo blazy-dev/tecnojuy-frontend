@@ -19,7 +19,8 @@ export default defineConfig({
   },
   vite: {
     define: {
-      __API_URL__: JSON.stringify(process.env.PUBLIC_API_URL || 'http://localhost:8000')
+      // FORZADO: Usar siempre la URL HTTPS en el build para evitar Mixed Content
+      __API_URL__: JSON.stringify(process.env.PUBLIC_API_URL || 'https://backend-tecnojuy2-production.up.railway.app')
     },
     server: {
       proxy: {
