@@ -3,7 +3,8 @@
 declare const __API_URL__: any; // Será reemplazado en build; en runtime puede no existir.
 
 export const config = {
-  apiUrl: typeof __API_URL__ !== 'undefined' ? __API_URL__ : 'http://localhost:8000',
+  // FORZAR HTTPS - FIX TEMPORAL PARA MIXED CONTENT
+  apiUrl: 'https://backend-tecnojuy2-production.up.railway.app',
   
   // URLs de la API
   endpoints: {
@@ -57,10 +58,13 @@ export const getApiUrl = (endpoint: string) => {
   const base = 'https://backend-tecnojuy2-production.up.railway.app';
   const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
-  // Proxy en desarrollo (localhost) para pasar cookies
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return `/api${ep}`; // El proxy ya empieza en /api
+  // En desarrollo usar proxy
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return `/api${ep}`;
   }
+  
+  // En producción usar HTTPS directo
+  console.log(`🔗 API URL: ${base}${ep}`); // Debug log
   return `${base}${ep}`;
 };
 
