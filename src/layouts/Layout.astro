@@ -37,6 +37,26 @@ const { title, description = "TecnoJuy - Plataforma educativa moderna" } = Astro
     <meta name="twitter:description" content={description} />
     
     <title>{title}</title>
+
+    <script>
+      // Script para forzar la anulación de registro de Service Workers
+      // Esto es para solucionar el problema de "SW zombie" que causa Mixed Content.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          if (registrations.length > 0) {
+            console.log(`🧹 Encontrados ${registrations.length} Service Workers. Anulando...`);
+            for (const registration of registrations) {
+              registration.unregister().then((unregistered) => {
+                if (unregistered) {
+                  console.log(`✅ SW anulado para scope: ${registration.scope}. Recargando...`);
+                  window.location.reload();
+                }
+              });
+            }
+          }
+        });
+      }
+    </script>
   </head>
   <body class="antialiased transition-colors" style="background-color: var(--bg-secondary);">
     <main class="min-h-screen">
