@@ -73,14 +73,15 @@ function AdminDashboardContent() {
     try {
       setLoadingStats(true);
       
-      // Cargar posts
-      const [allPosts, users] = await Promise.all([
+      // Cargar posts, usuarios recientes, y estadísticas de usuarios
+      const [allPosts, recentUsersData, userStats] = await Promise.all([
         api.getPostsAdmin({ limit: 10 }),
-        api.getUsers({ limit: 10 })
+        api.getUsers({ limit: 5 }), // Solo algunos usuarios recientes para mostrar
+        api.getUserStats() // Estadísticas reales de usuarios
       ]);
       
       setRecentPosts(allPosts);
-      setRecentUsers(users);
+      setRecentUsers(recentUsersData);
       
       // Calcular estadísticas
       const publishedCount = allPosts.filter(p => p.is_published).length;
@@ -90,7 +91,7 @@ function AdminDashboardContent() {
         totalPosts: allPosts.length,
         publishedPosts: publishedCount,
         draftPosts: draftCount,
-        totalUsers: users.length
+        totalUsers: userStats.total_users // Usar estadística real del backend
       });
       
     } catch (error) {

@@ -103,6 +103,15 @@ class ApiClient {
     return this.handleResponse<Role[]>(response);
   }
 
+  async getUserStats(): Promise<any> {
+    const response = await fetch(getApiUrl('/users/admin/stats'), {
+      credentials: 'include',
+      headers: this.getHeaders()
+    });
+    
+    return this.handleResponse<any>(response);
+  }
+
   // Posts
   async getPosts(params?: { skip?: number; limit?: number; author_id?: number; search?: string }): Promise<PostSummary[]> {
     const searchParams = new URLSearchParams();
