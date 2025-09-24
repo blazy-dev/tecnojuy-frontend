@@ -85,8 +85,9 @@ class ApiClient {
     if (params?.role_name) searchParams.append('role_name', params.role_name);
     if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
     
-    const url = `${getApiUrl(config.endpoints.users.list)}?${searchParams}`;
-    const response = await fetch(url, {
+    // Construir la URL correctamente usando getApiUrl
+    const endpoint = searchParams.toString() ? `${config.endpoints.users.list}?${searchParams}` : config.endpoints.users.list;
+    const response = await fetch(getApiUrl(endpoint), {
       credentials: 'include',
       headers: this.getHeaders()
     });
@@ -120,8 +121,8 @@ class ApiClient {
     if (params?.author_id) searchParams.append('author_id', params.author_id.toString());
     if (params?.search) searchParams.append('search', params.search);
     
-    const url = `${getApiUrl(config.endpoints.posts.list)}?${searchParams}`;
-    const response = await fetch(url, {
+    const endpoint = searchParams.toString() ? `${config.endpoints.posts.list}?${searchParams}` : config.endpoints.posts.list;
+    const response = await fetch(getApiUrl(endpoint), {
       headers: this.getHeaders()
     });
     
@@ -175,8 +176,8 @@ class ApiClient {
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     if (params?.is_published !== undefined) searchParams.append('is_published', params.is_published.toString());
     
-    const url = `${getApiUrl(config.endpoints.posts.adminList)}?${searchParams}`;
-    const response = await fetch(url, {
+    const endpoint = searchParams.toString() ? `${config.endpoints.posts.adminList}?${searchParams}` : config.endpoints.posts.adminList;
+    const response = await fetch(getApiUrl(endpoint), {
       credentials: 'include',
       headers: this.getHeaders()
     });
