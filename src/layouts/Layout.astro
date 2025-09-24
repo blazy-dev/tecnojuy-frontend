@@ -121,6 +121,14 @@ const { title, description = "TecnoJuy - Plataforma educativa moderna" } = Astro
               }
             }
             
+            // NUEVA LÓGICA: Forzar HTTPS en CUALQUIER petición a nuestro backend
+            if (typeof resource === 'string' && resource.includes('backend-tecnojuy2-production.up.railway.app')) {
+              if (!resource.startsWith('https://')) {
+                resource = resource.replace(/^http:\/\//, 'https://');
+                console.log(`🔒 FETCH FORZADO A HTTPS: ${resource}`);
+              }
+            }
+            
             return originalFetch.call(this, resource, config);
           };
         }
@@ -136,9 +144,9 @@ const { title, description = "TecnoJuy - Plataforma educativa moderna" } = Astro
               console.log('🌐 XHR llamado con:', url);
               
               if (typeof url === 'string' && url.includes('backend-tecnojuy2-production.up.railway.app')) {
-                if (url.startsWith('http://')) {
-                  url = url.replace('http://', 'https://');
-                  console.log(`🔒 XHR CORREGIDO: ${url}`);
+                if (!url.startsWith('https://')) {
+                  url = url.replace(/^http:\/\//, 'https://');
+                  console.log(`🔒 XHR FORZADO A HTTPS: ${url}`);
                 }
               }
               

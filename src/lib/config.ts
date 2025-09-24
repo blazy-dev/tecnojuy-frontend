@@ -18,7 +18,8 @@ export const config = {
     users: {
       profile: '/users/me',
       list: '/users/',
-      roles: '/users/roles'
+      roles: '/users/roles',
+      adminStats: '/users/admin/stats/'
     },
     posts: {
       list: '/posts/',

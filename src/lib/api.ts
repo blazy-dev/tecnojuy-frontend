@@ -105,7 +105,7 @@ class ApiClient {
   }
 
   async getUserStats(): Promise<any> {
-    const response = await fetch(getApiUrl('/users/admin/stats'), {
+    const response = await fetch(getApiUrl(config.endpoints.users.adminStats), {
       credentials: 'include',
       headers: this.getHeaders()
     });
