@@ -884,9 +884,21 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
     
+    // Para FormData, no podemos usar el headers normal porque incluye Content-Type
+    const headers = new Headers();
+    
+    // Añadir token de autenticación si está disponible
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('access_token');
+      if (accessToken) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
+      }
+    }
+    
     const response = await fetch(getApiUrl('/blog/admin/upload-featured-image'), {
       method: 'POST',
       credentials: 'include',
+      headers,
       body: formData
     });
     return this.handleResponse<any>(response);
