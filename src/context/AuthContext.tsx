@@ -66,14 +66,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       log('Checking session (non intrusive)...');
       const sessionResp = await fetch(getApiUrl('/auth/session'), { credentials: 'include' });
+      if (sessionResp.status === 404) {
+        log('Session endpoint 404 -> falling back to legacy /auth/me flow');
+        try {
+          const userData = await api.getCurrentUser();
+          setUser(userData);
+          log('Legacy /auth/me success');
+        } catch (primaryErr: any) {
+          log('Legacy /auth/me failed:', primaryErr?.message);
+          const hasRefresh = typeof document !== 'undefined' && document.cookie.includes('refresh_token=');
+          if (hasRefresh) {
+            try {
+              await api.refreshToken();
+              const userData = await api.getCurrentUser();
+              setUser(userData);
+              log('Legacy refresh succeeded');
+            } catch (refreshErr) {
+              log('Legacy refresh failed:', (refreshErr as any)?.message);
+              setUser(null);
+            }
+          } else {
+            setUser(null);
+          }
+        }
+        return;
+      }
       const sessionData = await sessionResp.json().catch(() => ({}));
       if (sessionData.authenticated && sessionData.user) {
         setUser(sessionData.user);
         log('Session OK as', sessionData.user.email);
-        return;
+      } else {
+        log('Session reports anonymous');
+        setUser(null);
       }
-      log('Session reports anonymous, no further auth call.');
-      setUser(null);
     } catch (e) {
       log('Session check error:', (e as any)?.message);
       setUser(null);
