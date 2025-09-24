@@ -1,3 +1,7 @@
+// Declaración para TypeScript del valor inyectado por Vite define (__API_URL__)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const __API_URL__: any; // Será reemplazado en build; en runtime puede no existir.
+
 export const config = {
   apiUrl: typeof __API_URL__ !== 'undefined' ? __API_URL__ : 'http://localhost:8000',
   
@@ -49,11 +53,15 @@ export const config = {
 };
 
 export const getApiUrl = (endpoint: string) => {
-  // Usar proxy en desarrollo para mantener las cookies de autenticación
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    return `/api${endpoint}`;
+  // Normalizar base y endpoint para evitar // que rompe rutas en FastAPI
+  const base = (config.apiUrl || '').replace(/\/+$/,'');
+  const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+  // Proxy en desarrollo (localhost) para pasar cookies
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return `/api${ep}`; // El proxy ya empieza en /api
   }
-  return `${config.apiUrl}${endpoint}`;
+  return `${base}${ep}`;
 };
 
 
