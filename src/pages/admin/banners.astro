@@ -1,9 +1,6 @@
 ---
-import Layout from '@/layouts/Layout.astro';
-import Navbar from '@/components/Navbar.astro';
-import BannerManager from '@/components/admin/BannerManager.tsx';
-
-export const prerender = false;
+// Redirect to the real homepage management system where hero/banner management is implemented
+return Astro.redirect('/admin/homepage', 301);
 ---
 
 <Layout 

@@ -143,12 +143,12 @@ function AdminDashboardContent() {
           <p className="text-sm text-secondary-600">Crear artículo de blog</p>
         </a>
 
-        <a href="/admin/banners" className="card-hover p-4 text-center">
+        <a href="/admin/homepage" className="card-hover p-4 text-center">
           <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
             <PhotoIcon className="w-6 h-6 text-blue-600" />
           </div>
-          <h3 className="font-medium text-secondary-900 mb-1">Subir Archivo</h3>
-          <p className="text-sm text-secondary-600">Gestionar archivos</p>
+          <h3 className="font-medium text-secondary-900 mb-1">Hero & Banners</h3>
+          <p className="text-sm text-secondary-600">Gestionar página principal</p>
         </a>
 
         <a href="/admin/posts" className="card-hover p-4 text-center">
