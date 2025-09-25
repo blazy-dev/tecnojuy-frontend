@@ -210,6 +210,16 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
     }
   };
 
+  const closeChapterModal = () => {
+    setShowChapterModal(false);
+    setEditingChapter(null);
+    setNewChapter({
+      title: '',
+      description: '',
+      is_published: false
+    });
+  };
+
   const handleCreateChapter = async () => {
     try {
       if (!newChapter.title) {
@@ -217,29 +227,75 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
         return;
       }
 
-      const chapterData: ChapterCreate = {
-        ...newChapter as ChapterCreate,
-        course_id: courseId,
-        order_index: chapters.length + 1
-      };
-
       const { api } = await import('@/lib/api');
-      await api.createChapter(chapterData);
-      
-      // Recargar capítulos desde el servidor
+      if (editingChapter) {
+        await api.updateChapter(editingChapter.id, {
+          title: newChapter.title,
+          description: newChapter.description,
+          is_published: newChapter.is_published
+        });
+        alert('¡Capítulo actualizado!');
+      } else {
+        const chapterData: ChapterCreate = {
+          ...newChapter as ChapterCreate,
+          course_id: courseId,
+          order_index: chapters.length + 1
+        };
+
+        await api.createChapter(chapterData);
+        alert('¡Capítulo creado exitosamente!');
+      }
+
       await loadChapters();
-      
-      setShowChapterModal(false);
-      setNewChapter({
-        title: '',
-        description: '',
-        is_published: false
-      });
-      
-      alert('¡Capítulo creado exitosamente!');
+
+      closeChapterModal();
     } catch (e: any) {
-      console.error('Error creando capítulo:', e);
-      alert('Error al crear el capítulo');
+      console.error('Error guardando capítulo:', e);
+      alert('Error al guardar el capítulo');
+    }
+  };
+
+  const handleDeleteChapter = async (chapterId: number) => {
+    if (!confirm('¿Eliminar este capítulo y todas sus lecciones? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      const { api } = await import('@/lib/api');
+      await api.deleteChapter(chapterId);
+      await loadChapters();
+      alert('Capítulo eliminado');
+    } catch (e) {
+      console.error('Error eliminando capítulo:', e);
+      alert('No se pudo eliminar el capítulo');
+    }
+  };
+
+  const handleMoveChapter = async (chapterId: number, direction: 'up' | 'down') => {
+    const index = chapters.findIndex(ch => ch.id === chapterId);
+    if (index === -1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= chapters.length) return;
+
+    const reordered = [...chapters];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    const normalized = reordered.map((chapter, idx) => ({
+      ...chapter,
+      order_index: idx + 1
+    }));
+
+    setChapters(normalized);
+
+    try {
+      const { api } = await import('@/lib/api');
+      await api.reorderChapters(courseId, normalized.map(ch => ch.id));
+    } catch (e) {
+      console.error('Error reordenando capítulos:', e);
+      alert('No se pudo reordenar el capítulo');
+      await loadChapters();
     }
   };
 
@@ -645,7 +701,21 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
                         </div>
                       </div>
                       
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => handleMoveChapter(chapter.id, 'up')}
+                          disabled={chapterIndex === 0}
+                          className={`px-3 py-1 rounded text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${chapterIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          ⬆️ Subir
+                        </button>
+                        <button
+                          onClick={() => handleMoveChapter(chapter.id, 'down')}
+                          disabled={chapterIndex === chapters.length - 1}
+                          className={`px-3 py-1 rounded text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${chapterIndex === chapters.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          ⬇️ Bajar
+                        </button>
                         <button
                           onClick={() => openLessonModal(chapter.id)}
                           className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
@@ -657,6 +727,12 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
                           className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700"
                         >
                           ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteChapter(chapter.id)}
+                          className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                        >
+                          🗑️ Borrar
                         </button>
                       </div>
                     </div>
@@ -893,7 +969,7 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
             
             <div className="flex justify-end space-x-3 mt-6">
               <button
-                onClick={() => setShowChapterModal(false)}
+                onClick={closeChapterModal}
                 className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
               >
                 Cancelar

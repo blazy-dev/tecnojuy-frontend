@@ -390,6 +390,38 @@ class ApiClient {
     return this.handleResponse<any>(response);
   }
 
+  async updateChapter(chapterId: number, chapterData: any): Promise<any> {
+    const response = await fetch(getApiUrl(`/courses/admin/chapters/${chapterId}/`), {
+      method: 'PUT',
+      credentials: 'include',
+      headers: this.getHeaders(),
+      body: JSON.stringify(chapterData)
+    });
+
+    return this.handleResponse<any>(response);
+  }
+
+  async deleteChapter(chapterId: number): Promise<void> {
+    const response = await fetch(getApiUrl(`/courses/admin/chapters/${chapterId}/`), {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: this.getHeaders()
+    });
+
+    await this.handleResponse(response);
+  }
+
+  async reorderChapters(courseId: number, chapterIds: number[]): Promise<void> {
+    const response = await fetch(getApiUrl(`/courses/admin/courses/${courseId}/chapters/reorder/`), {
+      method: 'POST',
+      credentials: 'include',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ chapter_ids: chapterIds })
+    });
+
+    await this.handleResponse(response);
+  }
+
   async createLesson(lessonData: any): Promise<any> {
     const response = await fetch(getApiUrl('/courses/admin/lessons/'), {
       method: 'POST',
