@@ -317,42 +317,63 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
       };
 
       const { api } = await import('@/lib/api');
-      // Si habrá upload, mostrar barra de progreso desde ya para que el usuario la vea
-      if (pendingFile && (newLesson.content_type === 'video' || newLesson.content_type === 'pdf' || newLesson.content_type === 'image')) {
+      
+      // Si hay archivo pendiente, mostrar modal de upload inmediatamente
+      const willUploadFile = pendingFile && (newLesson.content_type === 'video' || newLesson.content_type === 'pdf' || newLesson.content_type === 'image');
+      
+      if (willUploadFile) {
         setUploadingFile(true);
-        setUploadFileName(pendingFile.name);
-        setUploadProgress(5);
-      }
-      const created = await api.createLesson(lessonData);
-
-      // Si hay archivo seleccionado en el modal, subirlo ahora
-      if (pendingFile && (newLesson.content_type === 'video' || newLesson.content_type === 'pdf' || newLesson.content_type === 'image')) {
-        await handleFileUpload(pendingFile, created.id);
+        setUploadFileName(pendingFile!.name);
+        setUploadProgress(1);
+        console.log('🚀 Iniciando creación de lección con archivo:', pendingFile!.name);
       }
 
-      // Recargar capítulos desde el servidor (traerá file_url si se subió)
-      await loadChapters();
-      
-      setShowLessonModal(false);
-      setNewLesson({
-        title: '',
-        description: '',
-        content_type: 'text',
-        estimated_duration_minutes: 10,
-        is_published: false,
-        is_free: false,
-        can_download: false
-      });
-      setPendingFile(null);
-      setPendingFileName('');
-      if (pendingPreviewUrl) {
-        try { URL.revokeObjectURL(pendingPreviewUrl); } catch {}
+      try {
+        const created = await api.createLesson(lessonData);
+        console.log('✅ Lección creada:', created);
+
+        // Si hay archivo seleccionado, subirlo inmediatamente
+        if (willUploadFile) {
+          console.log('📤 Iniciando subida de archivo para lección:', created.id);
+          await handleFileUpload(pendingFile!, created.id);
+        }
+
+        // Recargar capítulos desde el servidor
+        await loadChapters();
+        
+        // Limpiar formulario
+        setShowLessonModal(false);
+        setNewLesson({
+          title: '',
+          description: '',
+          content_type: 'text',
+          estimated_duration_minutes: 10,
+          is_published: false,
+          is_free: false,
+          can_download: false
+        });
+        setPendingFile(null);
+        setPendingFileName('');
+        if (pendingPreviewUrl) {
+          try { URL.revokeObjectURL(pendingPreviewUrl); } catch {}
+        }
+        setPendingPreviewUrl(null);
+        
+        if (!willUploadFile) {
+          alert('¡Lección creada exitosamente!');
+        }
+        // Si hay upload, el mensaje se muestra en handleFileUpload
+        
+      } catch (lessonError) {
+        console.error('❌ Error creando lección:', lessonError);
+        setUploadingFile(false);
+        setUploadProgress(0);
+        setUploadFileName('');
+        throw lessonError;
       }
-      setPendingPreviewUrl(null);
       
-      alert('¡Lección creada exitosamente!');
     } catch (e: any) {
-      console.error('Error creando lección:', e);
+      console.error('Error en proceso de creación:', e);
       alert('Error al crear la lección');
     }
   };
@@ -372,44 +393,71 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
       } as Partial<LessonCreate>;
 
       const { api } = await import('@/lib/api');
-      if (pendingFile && (newLesson.content_type === 'video' || newLesson.content_type === 'pdf' || newLesson.content_type === 'image')) {
+      
+      // Si hay archivo pendiente, mostrar modal de upload
+      const willUploadFile = pendingFile && (newLesson.content_type === 'video' || newLesson.content_type === 'pdf' || newLesson.content_type === 'image');
+      
+      if (willUploadFile) {
         setUploadingFile(true);
-        setUploadFileName(pendingFile.name);
-        setUploadProgress(5);
-      }
-      await api.updateLesson(editingLesson.id, payload);
-
-      // Si hay archivo nuevo seleccionado, subirlo ahora
-      if (pendingFile && (newLesson.content_type === 'video' || newLesson.content_type === 'pdf' || newLesson.content_type === 'image')) {
-        await handleFileUpload(pendingFile, editingLesson.id);
+        setUploadFileName(pendingFile!.name);
+        setUploadProgress(1);
+        console.log('🚀 Iniciando actualización de lección con archivo:', pendingFile!.name);
       }
 
-      await loadChapters();
-      setShowLessonModal(false);
-      setEditingLesson(null);
-      setPendingFile(null);
-      setPendingFileName('');
-      if (pendingPreviewUrl) {
-        try { URL.revokeObjectURL(pendingPreviewUrl); } catch {}
+      try {
+        await api.updateLesson(editingLesson.id, payload);
+        console.log('✅ Lección actualizada');
+
+        // Si hay archivo nuevo seleccionado, subirlo ahora
+        if (willUploadFile) {
+          console.log('📤 Iniciando subida de archivo para lección:', editingLesson.id);
+          await handleFileUpload(pendingFile!, editingLesson.id);
+        }
+
+        await loadChapters();
+        setShowLessonModal(false);
+        setEditingLesson(null);
+        setPendingFile(null);
+        setPendingFileName('');
+        if (pendingPreviewUrl) {
+          try { URL.revokeObjectURL(pendingPreviewUrl); } catch {}
+        }
+        setPendingPreviewUrl(null);
+        
+        if (!willUploadFile) {
+          alert('¡Lección actualizada!');
+        }
+        // Si hay upload, el mensaje se muestra en handleFileUpload
+        
+      } catch (updateError) {
+        console.error('❌ Error actualizando lección:', updateError);
+        setUploadingFile(false);
+        setUploadProgress(0);
+        setUploadFileName('');
+        throw updateError;
       }
-      setPendingPreviewUrl(null);
-      alert('¡Lección actualizada!');
+      
     } catch (e: any) {
-      console.error('Error actualizando lección:', e);
+      console.error('Error en proceso de actualización:', e);
       alert('Error al actualizar la lección');
     }
   };
 
   const handleFileUpload = async (file: File, lessonId: number) => {
     const startAt = Date.now();
+    console.log('🚀 handleFileUpload iniciado:', { fileName: file.name, lessonId, fileSize: file.size });
+    
     try {
-      setUploadingFile(true);
-      setUploadProgress(0);
+      // Asegurar que el modal de upload esté visible
+      if (!uploadingFile) {
+        setUploadingFile(true);
+      }
+      setUploadProgress(2);
       setUploadFileName(file.name);
 
       console.log('🔄 Iniciando upload de archivo:', file.name, 'para lección:', lessonId);
 
-      // Validar (si la lección aún no está en estado, generar una falsa según el archivo)
+      // Validar archivo
       let lesson = getLessonById(lessonId);
       if (!lesson) {
         const inferredType: 'video'|'pdf'|'image' = file.type.startsWith('video/')
@@ -427,17 +475,18 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
           course_id: courseId
         } as Lesson;
       }
+      
       const validation = validateFileForLesson(file, lesson);
       if (!validation.ok) {
+        console.error('❌ Validación falló:', validation.message);
         alert(validation.message || 'Archivo inválido');
         setUploadingFile(false);
+        setUploadProgress(0);
+        setUploadFileName('');
         return;
       }
 
       const { api } = await import('@/lib/api');
-      
-      // 1. Subir archivo a través del proxy backend con progreso en tiempo real
-      console.log('📡 Subiendo archivo a través del backend...');
       
       // Mostrar mensaje especial para archivos grandes
       const isLargeFile = file.size > 50 * 1024 * 1024; // 50MB
@@ -445,21 +494,34 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
         console.log('📦 Archivo grande detectado, esto puede tomar varios minutos...');
       }
       
+      setUploadProgress(5);
+      console.log('📡 Subiendo archivo a través del backend...');
+      
       const uploadResult = await api.uploadFileProxy(file, 'courses', (p: number) => {
         // Para archivos grandes, mostrar progreso más conservador
         const displayProgress = isLargeFile ? Math.min(95, p) : p;
         setUploadProgress(prev => {
-          const next = Math.max(prev, Math.min(99, Math.round(displayProgress)));
+          const next = Math.max(prev, Math.min(98, Math.round(displayProgress)));
           return next;
         });
         
         // Log periódico para archivos grandes
-        if (isLargeFile && p % 10 === 0) {
+        if (isLargeFile && p % 20 === 0) {
           console.log(`📊 Progreso de subida: ${p}%`);
         }
       });
       
-      console.log('✅ Archivo subido:', uploadResult);
+      if (!uploadResult || !uploadResult.public_url) {
+        throw new Error('Upload falló: No se recibió URL del archivo');
+      }
+      
+      console.log('✅ Archivo subido exitosamente:', {
+        url: uploadResult.public_url,
+        size: uploadResult.size,
+        type: uploadResult.content_type
+      });
+      
+      setUploadProgress(99);
       
       // 2. Actualizar lección con información del archivo
       const updateData: any = {
@@ -473,16 +535,22 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
       if (file.type.startsWith('video/')) {
         updateData.video_url = uploadResult.public_url;
         updateData.video_object_key = uploadResult.object_key;
-        // Miniatura (solo para previsualización en UI)
-        const thumb = await generateVideoThumbnail(file);
-        if (thumb) {
-          setVideoThumbs(prev => ({ ...prev, [lessonId]: thumb }));
+        
+        // Generar miniatura (no bloquear si falla)
+        try {
+          const thumb = await generateVideoThumbnail(file);
+          if (thumb) {
+            setVideoThumbs(prev => ({ ...prev, [lessonId]: thumb }));
+          }
+        } catch (thumbError) {
+          console.warn('⚠️ No se pudo generar thumbnail del video:', thumbError);
         }
       }
 
-      console.log('📝 Actualizando lección con datos:', updateData);
+      console.log('📝 Actualizando lección con datos del archivo...');
       await api.updateLesson(lessonId, updateData);
-      console.log('✅ Lección actualizada');
+      console.log('✅ Lección actualizada con archivo');
+      
       setUploadProgress(100);
 
       // Finalizar progreso y limpiar
@@ -490,27 +558,33 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
         setUploadingFile(false);
         setUploadProgress(0);
         setUploadFileName('');
-      }, 1000);
+      }, 1500); // Dar tiempo para que se vea el 100%
       
       const elapsed = Date.now() - startAt;
       console.log(`⏱️ Upload completado en ${elapsed}ms`);
       
       if (isLargeFile) {
-        alert(`✅ Archivo grande subido exitosamente en ${Math.round(elapsed/1000)}s`);
+        alert(`✅ Video subido exitosamente en ${Math.round(elapsed/1000)}s`);
       } else {
-        alert('¡Archivo subido exitosamente!');
+        alert('✅ Archivo subido exitosamente!');
       }
       
-      await loadChapters(); // Recargar datos
+      // Recargar datos para mostrar el archivo en la UI
+      await loadChapters();
       
     } catch (e: any) {
       console.error('❌ Error durante upload:', e);
+      console.error('❌ Error stack:', e.stack);
+      
+      // Limpiar estado de upload
       setUploadingFile(false);
       setUploadProgress(0);
       setUploadFileName('');
       
       // Mostrar mensaje de error más específico
       const errorMsg = e.message || 'Error desconocido durante la subida';
+      console.error('❌ Error message:', errorMsg);
+      
       if (errorMsg.includes('Timeout:')) {
         // Caso especial: timeout pero posible subida exitosa
         const shouldCheck = confirm('⏰ La subida tomó mucho tiempo pero el archivo pudo haberse subido. ¿Quieres recargar para verificar?');
@@ -520,9 +594,11 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
         }
         alert(errorMsg);
       } else if (errorMsg.includes('timeout') || errorMsg.includes('agotado')) {
-        alert('⏰ La subida tomó demasiado tiempo. Para archivos muy grandes, intenta con una conexión más estable o divide el archivo.');
+        alert('⏰ La subida tomó demasiado tiempo. Para archivos muy grandes, intenta con una conexión más estable.');
       } else if (errorMsg.includes('413') || errorMsg.includes('muy grande')) {
         alert('📦 El archivo es demasiado grande. El límite máximo es de 500MB.');
+      } else if (errorMsg.includes('Upload falló')) {
+        alert('❌ Error en la subida del archivo. Verifica tu conexión e intenta nuevamente.');
       } else {
         alert(`❌ Error subiendo archivo: ${errorMsg}`);
       }
