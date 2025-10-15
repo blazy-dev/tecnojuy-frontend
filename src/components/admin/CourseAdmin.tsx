@@ -626,7 +626,7 @@ interface EditCourseInfoModalProps {
 function EditCourseInfoModal({ course, onSave, onClose }: EditCourseInfoModalProps) {
   const [formData, setFormData] = useState({
     title: course.title,
-    description: '',
+    description: course.description || '',
     short_description: course.short_description || '',
     level: course.level,
     language: course.language,
