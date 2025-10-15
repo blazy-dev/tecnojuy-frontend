@@ -106,35 +106,36 @@ export const prerender = false;
     </div>
     
     <!-- Modal para visualizar lección -->
-    <div id="lesson-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div class="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[95vh] overflow-hidden">
-        <div class="flex justify-between items-center p-4 border-b dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
-          <div>
-            <h3 id="lesson-modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">Lección</h3>
-            <p id="lesson-modal-subtitle" class="text-sm text-gray-600 dark:text-gray-400"></p>
+    <div id="lesson-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[98vh] sm:max-h-[95vh] overflow-hidden">
+        <div class="flex justify-between items-center p-3 sm:p-4 border-b dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+          <div class="flex-1 min-w-0 pr-2">
+            <h3 id="lesson-modal-title" class="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white truncate">Lección</h3>
+            <p id="lesson-modal-subtitle" class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate"></p>
           </div>
-          <button id="close-lesson-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl font-bold p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors">
+          <button id="close-lesson-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl font-bold p-1 sm:p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors flex-shrink-0">
             ×
           </button>
         </div>
-        <div class="flex flex-col h-full" style="max-height: calc(95vh - 80px);">
+        <div class="flex flex-col h-full" style="max-height: calc(98vh - 80px);">
           <!-- Video/Content Area -->
-          <div id="lesson-video-container" class="bg-black flex-1 flex items-center justify-center min-h-[400px] relative overflow-hidden pointer-events-none">
+          <div id="lesson-video-container" class="bg-black flex-1 flex items-center justify-center min-h-[250px] sm:min-h-[400px] relative overflow-hidden pointer-events-none">
             <div id="lesson-loading" class="text-white">
               <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-              <p>Cargando contenido...</p>
+              <p class="text-sm sm:text-base">Cargando contenido...</p>
             </div>
-            <video id="lesson-video" class="hidden w-full h-auto max-h-[70vh] object-contain pointer-events-auto" controls>
+            <video id="lesson-video" class="hidden w-full h-auto max-h-[60vh] sm:max-h-[70vh] object-contain pointer-events-auto" controls>
               Tu navegador no soporta el elemento de video.
             </video>
-            <div id="lesson-text-content" class="hidden text-white p-4 md:p-6 overflow-auto max-h-[70vh]">
+            <div id="lesson-text-content" class="hidden text-white p-3 sm:p-4 md:p-6 overflow-auto max-h-[60vh] sm:max-h-[70vh]">
               <!-- Contenido de texto -->
             </div>
           </div>
           
           <!-- Lesson Controls -->
-          <div class="bg-gray-50 dark:bg-gray-700 p-4 border-t dark:border-gray-600 relative z-10 lesson-controls">
-            <div class="flex justify-between items-center">
+          <div class="bg-gray-50 dark:bg-gray-700 p-2 sm:p-4 border-t dark:border-gray-600 relative z-10 lesson-controls">
+            <!-- Desktop Controls -->
+            <div class="hidden sm:flex justify-between items-center">
               <button id="prev-lesson-btn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50">
                 ← Anterior
               </button>
@@ -151,6 +152,26 @@ export const prerender = false;
               <button id="next-lesson-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
                 Siguiente →
               </button>
+            </div>
+            
+            <!-- Mobile Controls -->
+            <div class="sm:hidden space-y-2">
+              <div class="flex gap-2">
+                <button id="prev-lesson-btn" class="flex-1 bg-gray-600 text-white px-3 py-2 rounded text-xs hover:bg-gray-700 transition-colors disabled:opacity-50">
+                  ← Anterior
+                </button>
+                <button id="next-lesson-btn" class="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-xs hover:bg-blue-700 transition-colors disabled:opacity-50">
+                  Siguiente →
+                </button>
+              </div>
+              <div class="flex gap-2">
+                <button id="mark-complete-btn" class="flex-1 bg-green-600 text-white px-3 py-2 rounded text-xs hover:bg-green-700 transition-colors">
+                  ✓ Completa
+                </button>
+                <button id="download-btn" class="hidden flex-1 bg-blue-600 text-white px-3 py-2 rounded text-xs hover:bg-blue-700 transition-colors">
+                  📥 Descargar
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -327,47 +348,88 @@ export const prerender = false;
   function createChaptersList(chapters: Chapter[]): string {
     return chapters.map((chapter, chapterIndex) => `
       <div class="border border-gray-200 dark:border-gray-600 rounded-lg mb-4">
-        <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${chapter.title}</h3>
-          ${chapter.description ? `<p class="text-gray-600 dark:text-gray-400 mt-1">${chapter.description}</p>` : ''}
+        <div class="bg-gray-50 dark:bg-gray-700 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-600">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">${chapter.title}</h3>
+          ${chapter.description ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${chapter.description}</p>` : ''}
         </div>
         
         <div class="divide-y divide-gray-200 dark:divide-gray-600">
           ${chapter.lessons.map((lesson, lessonIndex) => `
-            <div class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              <div class="flex items-center justify-between">
+            <div class="px-3 sm:px-6 py-3 sm:py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <!-- Layout Desktop -->
+              <div class="hidden sm:flex items-center justify-between">
                 <div class="flex items-center gap-3 flex-1">
-                  <span class="text-2xl">${getContentTypeIcon(lesson.content_type)}</span>
+                  <span class="text-xl sm:text-2xl flex-shrink-0">${getContentTypeIcon(lesson.content_type)}</span>
                   
-                  <div class="flex-1">
-                    <h4 class="font-medium text-gray-900 dark:text-white">${lesson.title}</h4>
-                    ${lesson.description ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${lesson.description}</p>` : ''}
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-medium text-gray-900 dark:text-white truncate">${lesson.title}</h4>
+                    ${lesson.description ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">${lesson.description}</p>` : ''}
                     
-                    <div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    <div class="flex items-center gap-3 sm:gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
                       ${lesson.estimated_duration_minutes ? `
-                        <span>⏱️ ${formatDuration(lesson.estimated_duration_minutes)}</span>
+                        <span class="flex items-center gap-1">⏱️ ${formatDuration(lesson.estimated_duration_minutes)}</span>
                       ` : ''}
                       
                       ${lesson.file_type ? `
-                        <span>📎 ${lesson.file_type.toUpperCase()}</span>
+                        <span class="flex items-center gap-1">📎 ${lesson.file_type.toUpperCase()}</span>
                       ` : ''}
                       
                       ${lesson.file_size_bytes ? `
-                        <span>💾 ${formatFileSize(lesson.file_size_bytes)}</span>
+                        <span class="flex items-center gap-1">💾 ${formatFileSize(lesson.file_size_bytes)}</span>
                       ` : ''}
                     </div>
                   </div>
                 </div>
                 
-                <div class="flex items-center gap-2 ml-4">
+                <div class="flex items-center gap-2 ml-4 flex-shrink-0">
                   ${lesson.is_free 
-                    ? '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Gratis</span>'
-                    : '<span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">Premium</span>'
+                    ? '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded whitespace-nowrap">Gratis</span>'
+                    : '<span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded whitespace-nowrap">Premium</span>'
                   }
                   
                   <button 
                     onclick="openLessonByIndex(${chapterIndex}, ${lessonIndex})"
-                    class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
+                    class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors whitespace-nowrap"
+                  >
+                    Ver lección
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Layout Mobile -->
+              <div class="sm:hidden">
+                <div class="flex items-start gap-2 mb-3">
+                  <span class="text-xl flex-shrink-0">${getContentTypeIcon(lesson.content_type)}</span>
+                  
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-medium text-sm text-gray-900 dark:text-white mb-1">${lesson.title}</h4>
+                    ${lesson.description ? `<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">${lesson.description}</p>` : ''}
+                  </div>
+                  
+                  ${lesson.is_free 
+                    ? '<span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded flex-shrink-0">Gratis</span>'
+                    : '<span class="bg-orange-100 text-orange-800 text-xs px-2 py-0.5 rounded flex-shrink-0">Premium</span>'
+                  }
+                </div>
+                
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap flex-1">
+                    ${lesson.estimated_duration_minutes ? `
+                      <span class="flex items-center gap-1 whitespace-nowrap">⏱️ ${formatDuration(lesson.estimated_duration_minutes)}</span>
+                    ` : ''}
+                    
+                    ${lesson.file_type ? `
+                      <span class="flex items-center gap-1 whitespace-nowrap">📎 ${lesson.file_type.toUpperCase()}</span>
+                    ` : ''}
+                    
+                    ${lesson.file_size_bytes ? `
+                      <span class="flex items-center gap-1 whitespace-nowrap">💾 ${formatFileSize(lesson.file_size_bytes)}</span>
+                    ` : ''}
+                  </div>
+                  
+                  <button 
+                    onclick="openLessonByIndex(${chapterIndex}, ${lessonIndex})"
+                    class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-700 transition-colors whitespace-nowrap flex-shrink-0"
                   >
                     Ver lección
                   </button>
