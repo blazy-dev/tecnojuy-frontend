@@ -118,7 +118,7 @@ const DynamicHomepage: React.FC = () => {
   }
 
   return (
-    <div className="relative h-[70vh] min-h-[500px] overflow-hidden" style={{ zIndex: 10 }}>
+    <div className="relative h-[60vh] md:h-[85vh] min-h-[500px] overflow-hidden" style={{ zIndex: 10 }}>
 
       {/* Hero Slider */}
       <div className="relative h-full" style={{ zIndex: 10 }}>
@@ -132,7 +132,7 @@ const DynamicHomepage: React.FC = () => {
             style={{ pointerEvents: index === currentSlide ? 'auto' : 'none' }}
           >
             <section 
-              className="relative bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 h-full flex items-center"
+              className="relative bg-gradient-to-br from-green-600 via-teal-700 to-blue-800 h-full flex items-center"
               style={{ 
                 pointerEvents: 'auto',
                 zIndex: 10,
@@ -141,7 +141,7 @@ const DynamicHomepage: React.FC = () => {
             >
               {slide.image_url && (
                 <div 
-                  className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
                   style={{ 
                     backgroundImage: `url(${slide.image_url})`,
                     pointerEvents: 'none'
@@ -178,7 +178,7 @@ const DynamicHomepage: React.FC = () => {
                           pointerEvents: 'auto',
                           zIndex: 30,
                           position: 'relative',
-                          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
+                          boxShadow: '0 10px 40px rgba(0, 204, 99, 0.4)'
                         }}
                         onClick={(e) => {
                           e.preventDefault();
