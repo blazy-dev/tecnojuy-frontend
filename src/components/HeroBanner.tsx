@@ -85,7 +85,7 @@ export default function HeroBanner({
   if (activeBanners.length === 0) return null;
 
   return (
-    <section className="relative h-[85vh] sm:h-[75vh] md:h-[80vh] overflow-hidden">
+    <section className="relative h-[90vh] sm:h-[75vh] md:h-[80vh] overflow-hidden">
       {/* Banner Slides */}
       <div className="relative h-full">
         {activeBanners.map((banner, index) => (
@@ -101,29 +101,29 @@ export default function HeroBanner({
           >
             {/* Background Image - Mejor posicionamiento en móvil */}
             <div 
-              className="absolute inset-0 bg-cover bg-no-repeat bg-[center_35%] sm:bg-center"
+              className="absolute inset-0 bg-cover bg-no-repeat bg-[center_40%] sm:bg-center"
               style={{ backgroundImage: `url(${banner.image})` }}
             >
               {/* Overlay con gradiente de colores principales */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#00012d]/90 via-[#02a0c7]/70 to-[#00cc66]/80"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-[#00012d]/95 via-[#02a0c7]/75 to-[#00cc66]/85"></div>
             </div>
 
             {/* Content */}
-            <div className="relative z-10 h-full flex items-center">
-              <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 w-full">
+            <div className="relative z-10 h-full flex items-center pb-20 sm:pb-0">
+              <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full">
                 <div className="max-w-3xl">
                   {/* Subtitle */}
-                  <p className="text-[#00cc66] font-semibold text-sm sm:text-base md:text-lg mb-3 md:mb-4 animate-fade-in-up delay-100">
+                  <p className="text-[#00cc66] font-semibold text-xs sm:text-base md:text-lg mb-2 md:mb-4 animate-fade-in-up delay-100">
                     {banner.subtitle}
                   </p>
                   
                   {/* Title - Responsivo mejorado */}
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 md:mb-6 leading-tight animate-fade-in-up delay-200">
+                  <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-3 md:mb-6 leading-tight animate-fade-in-up delay-200">
                     {banner.title}
                   </h1>
                   
                   {/* Description */}
-                  <p className="text-base sm:text-lg md:text-xl text-gray-200 mb-6 md:mb-8 leading-relaxed animate-fade-in-up delay-300">
+                  <p className="text-sm sm:text-lg md:text-xl text-gray-200 mb-5 md:mb-8 leading-relaxed animate-fade-in-up delay-300">
                     {banner.description}
                   </p>
                   
@@ -131,7 +131,7 @@ export default function HeroBanner({
                   <div className="animate-fade-in-up delay-400">
                     <a 
                       href={banner.ctaLink}
-                      className="inline-flex items-center px-6 py-3 md:px-8 md:py-4 bg-[#00cc66] hover:bg-[#00b359] text-white font-semibold text-sm md:text-base rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                      className="inline-flex items-center px-5 py-2.5 md:px-8 md:py-4 bg-[#00cc66] hover:bg-[#00b359] text-white font-semibold text-sm md:text-base rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                     >
                       {banner.ctaText}
                       <svg className="ml-2 w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,24 +146,44 @@ export default function HeroBanner({
         ))}
       </div>
 
-      {/* Navigation Arrows - Separados del contenido en móvil */}
+      {/* Navigation Arrows - Abajo en móvil, centro en desktop */}
       {activeBanners.length > 1 && (
         <>
+          {/* Desktop Navigation - Centrado verticalmente */}
           <button
             onClick={prevSlide}
-            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
+            className="hidden sm:block absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
             aria-label="Banner anterior"
           >
-            <ChevronLeftIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
+            <ChevronLeftIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
           </button>
           
           <button
             onClick={nextSlide}
-            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
+            className="hidden sm:block absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
             aria-label="Banner siguiente"
           >
-            <ChevronRightIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
+            <ChevronRightIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
           </button>
+          
+          {/* Mobile Navigation - Abajo junto a los dots */}
+          <div className="sm:hidden absolute bottom-16 left-0 right-0 z-20 flex justify-center items-center gap-4">
+            <button
+              onClick={prevSlide}
+              className="p-2 rounded-full bg-white/20 backdrop-blur-sm active:bg-white/30 transition-all duration-300"
+              aria-label="Banner anterior"
+            >
+              <ChevronLeftIcon className="w-5 h-5 text-white" />
+            </button>
+            
+            <button
+              onClick={nextSlide}
+              className="p-2 rounded-full bg-white/20 backdrop-blur-sm active:bg-white/30 transition-all duration-300"
+              aria-label="Banner siguiente"
+            >
+              <ChevronRightIcon className="w-5 h-5 text-white" />
+            </button>
+          </div>
         </>
       )}
 
