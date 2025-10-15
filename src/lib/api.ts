@@ -194,6 +194,72 @@ class ApiClient {
     return this.handleResponse<Post>(response);
   }
 
+  // Categories
+  async createCategory(data: { name: string; slug: string; description?: string; color: string }): Promise<any> {
+    const response = await fetch(getApiUrl('/blog/admin/categories'), {
+      method: 'POST',
+      credentials: 'include',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    
+    return this.handleResponse(response);
+  }
+
+  async updateCategory(id: number, data: { name?: string; slug?: string; description?: string; color?: string }): Promise<any> {
+    const response = await fetch(getApiUrl(`/blog/admin/categories/${id}`), {
+      method: 'PUT',
+      credentials: 'include',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    
+    return this.handleResponse(response);
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    const response = await fetch(getApiUrl(`/blog/admin/categories/${id}`), {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: this.getHeaders()
+    });
+    
+    await this.handleResponse(response);
+  }
+
+  // Tags
+  async createTag(data: { name: string; slug: string }): Promise<any> {
+    const response = await fetch(getApiUrl('/blog/admin/tags'), {
+      method: 'POST',
+      credentials: 'include',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    
+    return this.handleResponse(response);
+  }
+
+  async updateTag(id: number, data: { name?: string; slug?: string }): Promise<any> {
+    const response = await fetch(getApiUrl(`/blog/admin/tags/${id}`), {
+      method: 'PUT',
+      credentials: 'include',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    
+    return this.handleResponse(response);
+  }
+
+  async deleteTag(id: number): Promise<void> {
+    const response = await fetch(getApiUrl(`/blog/admin/tags/${id}`), {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: this.getHeaders()
+    });
+    
+    await this.handleResponse(response);
+  }
+
   // Storage
 
   async uploadFile(uploadUrl: string, file: File, contentType: string): Promise<void> {

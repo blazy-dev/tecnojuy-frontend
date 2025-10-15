@@ -847,7 +847,186 @@ const BlogAdminContent: React.FC<BlogAdminProps> = ({ openNew }) => {
         </div>
       )}
 
-      {/* Modales para categorías y tags - (futuro) */}
+      {/* Modal Crear/Editar Categoría */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                {editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowCategoryModal(false);
+                  setEditingCategory(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >✖️</button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                <input
+                  type="text"
+                  id="category-name"
+                  defaultValue={editingCategory?.name || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  placeholder="Tecnología"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                <input
+                  type="text"
+                  id="category-slug"
+                  defaultValue={editingCategory?.slug || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  placeholder="tecnologia"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                <textarea
+                  id="category-description"
+                  rows={2}
+                  defaultValue={editingCategory?.description || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  placeholder="Artículos sobre tecnología..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                <input
+                  type="color"
+                  id="category-color"
+                  defaultValue={editingCategory?.color || '#3B82F6'}
+                  className="w-full h-10 px-1 py-1 border border-gray-300 rounded-lg cursor-pointer"
+                />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200"
+                onClick={() => {
+                  setShowCategoryModal(false);
+                  setEditingCategory(null);
+                }}
+              >Cancelar</button>
+              <button
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                onClick={async () => {
+                  const name = (document.getElementById('category-name') as HTMLInputElement).value;
+                  const slug = (document.getElementById('category-slug') as HTMLInputElement).value || generateSlug(name);
+                  const description = (document.getElementById('category-description') as HTMLTextAreaElement).value;
+                  const color = (document.getElementById('category-color') as HTMLInputElement).value;
+
+                  if (!name) {
+                    alert('El nombre es obligatorio');
+                    return;
+                  }
+
+                  try {
+                    setSaving(true);
+                    if (editingCategory) {
+                      await api.updateCategory(editingCategory.id, { name, slug, description, color });
+                    } else {
+                      await api.createCategory({ name, slug, description, color });
+                    }
+                    setShowCategoryModal(false);
+                    setEditingCategory(null);
+                    await Promise.all([loadCategories(), loadStats()]);
+                  } catch (err) {
+                    console.error('Error guardando categoría:', err);
+                    alert('Error al guardar la categoría');
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              >{editingCategory ? 'Actualizar' : 'Crear'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Crear/Editar Tag */}
+      {showTagModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                {editingTag ? 'Editar Tag' : 'Nuevo Tag'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowTagModal(false);
+                  setEditingTag(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >✖️</button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                <input
+                  type="text"
+                  id="tag-name"
+                  defaultValue={editingTag?.name || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  placeholder="React"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                <input
+                  type="text"
+                  id="tag-slug"
+                  defaultValue={editingTag?.slug || ''}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  placeholder="react"
+                />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200"
+                onClick={() => {
+                  setShowTagModal(false);
+                  setEditingTag(null);
+                }}
+              >Cancelar</button>
+              <button
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                onClick={async () => {
+                  const name = (document.getElementById('tag-name') as HTMLInputElement).value;
+                  const slug = (document.getElementById('tag-slug') as HTMLInputElement).value || generateSlug(name);
+
+                  if (!name) {
+                    alert('El nombre es obligatorio');
+                    return;
+                  }
+
+                  try {
+                    setSaving(true);
+                    if (editingTag) {
+                      await api.updateTag(editingTag.id, { name, slug });
+                    } else {
+                      await api.createTag({ name, slug });
+                    }
+                    setShowTagModal(false);
+                    setEditingTag(null);
+                    await Promise.all([loadTags(), loadStats()]);
+                  } catch (err) {
+                    console.error('Error guardando tag:', err);
+                    alert('Error al guardar el tag');
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              >{editingTag ? 'Actualizar' : 'Crear'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
