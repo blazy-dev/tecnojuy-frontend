@@ -7,6 +7,7 @@ import CourseEditor from './CourseEditor';
 interface Course {
   id: number;
   title: string;
+  description?: string;
   short_description?: string;
   category?: string;
   level: string;
