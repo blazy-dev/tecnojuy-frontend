@@ -464,10 +464,12 @@ class ApiClient {
       const doUpload = (): Promise<any> => new Promise((resolve, reject) => {
         try {
           const xhr = new XMLHttpRequest();
-          xhr.open('POST', getApiUrl('/storage/proxy-upload'));
+          
+          // IMPORTANTE: Abrir con async=true explícitamente
+          xhr.open('POST', getApiUrl('/storage/proxy-upload'), true);
           xhr.withCredentials = true;
           
-          // Configurar timeouts para archivos grandes
+          // Configurar timeouts DESPUÉS de open() para XHR asíncrono
           const isLargeFile = file.size > 50 * 1024 * 1024; // 50MB
           xhr.timeout = isLargeFile ? 600000 : 120000; // 10 min para grandes, 2 min para normales
           
@@ -544,7 +546,7 @@ class ApiClient {
                 await fetch(getApiUrl('/auth/refresh'), { method: 'POST', credentials: 'include' });
                 // retry
                 const xhr2 = new XMLHttpRequest();
-                xhr2.open('POST', getApiUrl('/storage/proxy-upload'));
+                xhr2.open('POST', getApiUrl('/storage/proxy-upload'), true);
                 xhr2.withCredentials = true;
                 xhr2.timeout = isLargeFile ? 600000 : 120000; // 10 min para grandes, 2 min para normales
                 
