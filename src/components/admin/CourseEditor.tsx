@@ -299,6 +299,44 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
     }
   };
 
+  const handleMoveLesson = async (chapterId: number, lessonId: number, direction: 'up' | 'down') => {
+    const chapterIndex = chapters.findIndex(ch => ch.id === chapterId);
+    if (chapterIndex === -1) return;
+
+    const chapter = chapters[chapterIndex];
+    const lessonIndex = chapter.lessons.findIndex(l => l.id === lessonId);
+    if (lessonIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? lessonIndex - 1 : lessonIndex + 1;
+    if (targetIndex < 0 || targetIndex >= chapter.lessons.length) return;
+
+    const reorderedLessons = [...chapter.lessons];
+    const [moved] = reorderedLessons.splice(lessonIndex, 1);
+    reorderedLessons.splice(targetIndex, 0, moved);
+
+    const normalizedLessons = reorderedLessons.map((lesson, idx) => ({
+      ...lesson,
+      order_index: idx + 1
+    }));
+
+    const updatedChapters = [...chapters];
+    updatedChapters[chapterIndex] = {
+      ...chapter,
+      lessons: normalizedLessons
+    };
+
+    setChapters(updatedChapters);
+
+    try {
+      const { api } = await import('@/lib/api');
+      await api.reorderLessons(chapterId, normalizedLessons.map(l => l.id));
+    } catch (e) {
+      console.error('Error reordenando lecciones:', e);
+      alert('No se pudo reordenar la lección');
+      await loadChapters();
+    }
+  };
+
   const handleCreateLesson = async () => {
     try {
       if (!newLesson.title || !selectedChapterId) {
@@ -966,6 +1004,32 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
                                   ⬇️ Descargar
                                 </button>
                               )}
+                              
+                              {/* Botones para reordenar lecciones */}
+                              <button
+                                onClick={() => handleMoveLesson(chapter.id, lesson.id, 'up')}
+                                disabled={lessonIndex === 0}
+                                className={`px-3 py-1 rounded text-sm ${
+                                  lessonIndex === 0
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                }`}
+                                title="Subir lección"
+                              >
+                                ↑
+                              </button>
+                              <button
+                                onClick={() => handleMoveLesson(chapter.id, lesson.id, 'down')}
+                                disabled={lessonIndex === chapter.lessons.length - 1}
+                                className={`px-3 py-1 rounded text-sm ${
+                                  lessonIndex === chapter.lessons.length - 1
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                }`}
+                                title="Bajar lección"
+                              >
+                                ↓
+                              </button>
                               
                               <button
                                 onClick={() => openLessonModal(chapter.id, lesson)}

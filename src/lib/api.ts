@@ -422,6 +422,17 @@ class ApiClient {
     await this.handleResponse(response);
   }
 
+  async reorderLessons(chapterId: number, lessonIds: number[]): Promise<void> {
+    const response = await fetch(getApiUrl(`/courses/admin/chapters/${chapterId}/lessons/reorder/`), {
+      method: 'POST',
+      credentials: 'include',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ lesson_ids: lessonIds })
+    });
+
+    await this.handleResponse(response);
+  }
+
   async createLesson(lessonData: any): Promise<any> {
     const response = await fetch(getApiUrl('/courses/admin/lessons/'), {
       method: 'POST',
