@@ -173,11 +173,12 @@ const DynamicHomepage: React.FC = () => {
                     <div className="space-y-4">
                       <button 
                         type="button"
-                        className="inline-block bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-green-500 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 cursor-pointer z-50 relative"
+                        className="inline-block bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-green-500 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 cursor-pointer z-50 relative shadow-xl"
                         style={{ 
                           pointerEvents: 'auto',
                           zIndex: 30,
-                          position: 'relative'
+                          position: 'relative',
+                          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
                         }}
                         onClick={(e) => {
                           e.preventDefault();
@@ -208,13 +209,14 @@ const DynamicHomepage: React.FC = () => {
         ))}
       </div>
 
-      {/* CONTROLES DE NAVEGACIÓN MEJORADOS */}
+      {/* CONTROLES DE NAVEGACIÓN - Solo en desktop */}
       
-      {/* Botones de navegación anterior/siguiente */}
+      {/* Botones de navegación anterior/siguiente - Ocultos en mobile */}
       {heroSlides.length > 1 && (
         <>
           <button
             onClick={prevSlide}
+            className="hidden md:flex"
             style={{
               position: 'absolute',
               left: '30px',
@@ -231,7 +233,6 @@ const DynamicHomepage: React.FC = () => {
               fontWeight: 'bold',
               cursor: 'pointer',
               zIndex: 9999,
-              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'all 0.3s ease',
@@ -251,6 +252,7 @@ const DynamicHomepage: React.FC = () => {
           
           <button
             onClick={nextSlide}
+            className="hidden md:flex"
             style={{
               position: 'absolute',
               right: '30px',
@@ -267,7 +269,6 @@ const DynamicHomepage: React.FC = () => {
               fontWeight: 'bold',
               cursor: 'pointer',
               zIndex: 9999,
-              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'all 0.3s ease',
