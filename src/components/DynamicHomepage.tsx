@@ -118,7 +118,7 @@ const DynamicHomepage: React.FC = () => {
   }
 
   return (
-    <div className="relative h-[60vh] md:h-[85vh] min-h-[500px] overflow-hidden" style={{ zIndex: 10 }}>
+    <div className="relative h-[30vh] md:h-[85vh] min-h-[400px] overflow-hidden" style={{ zIndex: 10 }}>
 
       {/* Hero Slider */}
       <div className="relative h-full" style={{ zIndex: 10 }}>
