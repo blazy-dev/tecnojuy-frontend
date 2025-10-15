@@ -467,6 +467,9 @@ class ApiClient {
           xhr.open('POST', getApiUrl('/storage/proxy-upload'));
           xhr.withCredentials = true;
           
+          // Configurar timeouts para archivos grandes
+          xhr.timeout = 300000; // 5 minutos para archivos grandes
+          
           // Añadir token de autorización si está disponible
           if (typeof window !== 'undefined') {
             const accessToken = localStorage.getItem('access_token');
@@ -475,26 +478,65 @@ class ApiClient {
             }
           }
 
+          let lastProgressTime = Date.now();
+          let progressStalled = false;
+
           xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
+              const now = Date.now();
               const percent = Math.round((event.loaded / event.total) * 100);
-              onProgress(Math.min(99, Math.max(1, percent)));
+              
+              // Detectar progreso estancado
+              if (percent > 0) {
+                progressStalled = false;
+                lastProgressTime = now;
+              }
+              
+              // Para archivos grandes, mostrar progreso más suave
+              const smoothPercent = file.size > 50 * 1024 * 1024 ? // 50MB
+                Math.min(95, Math.max(1, percent)) : // Limitar a 95% hasta completar
+                Math.min(99, Math.max(1, percent));
+              
+              onProgress(smoothPercent);
+              
+              console.log(`📊 Upload progress: ${percent}% (${(event.loaded / 1024 / 1024).toFixed(1)}MB / ${(event.total / 1024 / 1024).toFixed(1)}MB)`);
             }
           };
 
-          xhr.onerror = () => reject(new Error('Error de red durante la carga'));
-          xhr.ontimeout = () => reject(new Error('Tiempo de espera agotado durante la carga'));
+          // Monitorear progreso estancado cada 30 segundos
+          const stallCheckInterval = setInterval(() => {
+            const now = Date.now();
+            if (now - lastProgressTime > 30000) { // 30 segundos sin progreso
+              progressStalled = true;
+              console.warn('⚠️ Upload progress appears stalled');
+            }
+          }, 5000);
+
+          xhr.onerror = () => {
+            clearInterval(stallCheckInterval);
+            reject(new Error('Error de red durante la carga del archivo'));
+          };
+          
+          xhr.ontimeout = () => {
+            clearInterval(stallCheckInterval);
+            reject(new Error('Tiempo de espera agotado. El archivo es muy grande o la conexión es lenta.'));
+          };
 
           xhr.onload = async () => {
+            clearInterval(stallCheckInterval);
+            
             if (xhr.status >= 200 && xhr.status < 300) {
               try {
                 const json = JSON.parse(xhr.responseText || '{}');
                 onProgress(100);
+                console.log('✅ Upload completed successfully');
                 resolve(json);
               } catch (e) {
+                console.error('❌ Invalid server response:', xhr.responseText);
                 reject(new Error('Respuesta inválida del servidor'));
               }
             } else if (xhr.status === 401) {
+              console.log('🔄 Refreshing auth and retrying upload...');
               // Try to refresh auth and retry once
               try {
                 await fetch(getApiUrl('/auth/refresh'), { method: 'POST', credentials: 'include' });
@@ -502,6 +544,7 @@ class ApiClient {
                 const xhr2 = new XMLHttpRequest();
                 xhr2.open('POST', getApiUrl('/storage/proxy-upload'));
                 xhr2.withCredentials = true;
+                xhr2.timeout = 300000; // 5 minutos
                 
                 // Añadir token de autorización para el retry también
                 if (typeof window !== 'undefined') {
@@ -526,17 +569,21 @@ class ApiClient {
                   }
                 };
                 xhr2.onerror = () => reject(new Error('Error de red durante la carga (reintento)'));
+                xhr2.ontimeout = () => reject(new Error('Timeout en reintento de carga'));
                 xhr2.send(formData);
               } catch (e) {
                 reject(new Error('No autorizado y no se pudo refrescar sesión'));
               }
             } else {
+              console.error(`❌ Upload failed with status ${xhr.status}:`, xhr.responseText);
               reject(new Error(`Error de carga: ${xhr.status} ${xhr.statusText}`));
             }
           };
 
+          console.log(`🚀 Starting upload of ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
           xhr.send(formData);
         } catch (e) {
+          console.error('❌ Upload error:', e);
           reject(e);
         }
       });

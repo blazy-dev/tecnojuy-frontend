@@ -404,7 +404,7 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
     const startAt = Date.now();
     try {
       setUploadingFile(true);
-  setUploadProgress(0);
+      setUploadProgress(0);
       setUploadFileName(file.name);
 
       console.log('🔄 Iniciando upload de archivo:', file.name, 'para lección:', lessonId);
@@ -430,6 +430,7 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
       const validation = validateFileForLesson(file, lesson);
       if (!validation.ok) {
         alert(validation.message || 'Archivo inválido');
+        setUploadingFile(false);
         return;
       }
 
@@ -437,13 +438,27 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
       
       // 1. Subir archivo a través del proxy backend con progreso en tiempo real
       console.log('📡 Subiendo archivo a través del backend...');
+      
+      // Mostrar mensaje especial para archivos grandes
+      const isLargeFile = file.size > 50 * 1024 * 1024; // 50MB
+      if (isLargeFile) {
+        console.log('📦 Archivo grande detectado, esto puede tomar varios minutos...');
+      }
+      
       const uploadResult = await api.uploadFileProxy(file, 'courses', (p: number) => {
-        // Suavizar y limitar el rango visible para evitar saltos bruscos
+        // Para archivos grandes, mostrar progreso más conservador
+        const displayProgress = isLargeFile ? Math.min(95, p) : p;
         setUploadProgress(prev => {
-          const next = Math.max(prev, Math.min(99, Math.round(p)));
+          const next = Math.max(prev, Math.min(99, Math.round(displayProgress)));
           return next;
         });
+        
+        // Log periódico para archivos grandes
+        if (isLargeFile && p % 10 === 0) {
+          console.log(`📊 Progreso de subida: ${p}%`);
+        }
       });
+      
       console.log('✅ Archivo subido:', uploadResult);
       
       // 2. Actualizar lección con información del archivo
@@ -468,28 +483,41 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
       console.log('📝 Actualizando lección con datos:', updateData);
       await api.updateLesson(lessonId, updateData);
       console.log('✅ Lección actualizada');
-  setUploadProgress(100);
+      setUploadProgress(100);
 
-      alert('¡Archivo subido exitosamente!');
-      await loadChapters(); // Recargar datos
-      
-    } catch (e: any) {
-      console.error('❌ Error subiendo archivo:', e);
-      console.error('❌ Error details:', {
-        name: e?.name,
-        message: e?.message,
-        stack: e?.stack
-      });
-      alert(`Error al subir el archivo: ${e?.message || 'desconocido'}`);
-    } finally {
-      const elapsed = Date.now() - startAt;
-      const minVisible = 600; // ms
-      const delay = Math.max(0, minVisible - elapsed);
+      // Finalizar progreso y limpiar
       setTimeout(() => {
         setUploadingFile(false);
         setUploadProgress(0);
         setUploadFileName('');
-      }, delay);
+      }, 1000);
+      
+      const elapsed = Date.now() - startAt;
+      console.log(`⏱️ Upload completado en ${elapsed}ms`);
+      
+      if (isLargeFile) {
+        alert(`✅ Archivo grande subido exitosamente en ${Math.round(elapsed/1000)}s`);
+      } else {
+        alert('¡Archivo subido exitosamente!');
+      }
+      
+      await loadChapters(); // Recargar datos
+      
+    } catch (e: any) {
+      console.error('❌ Error durante upload:', e);
+      setUploadingFile(false);
+      setUploadProgress(0);
+      setUploadFileName('');
+      
+      // Mostrar mensaje de error más específico
+      const errorMsg = e.message || 'Error desconocido durante la subida';
+      if (errorMsg.includes('timeout') || errorMsg.includes('agotado')) {
+        alert('⏰ La subida tomó demasiado tiempo. Para archivos muy grandes, intenta con una conexión más estable o divide el archivo.');
+      } else if (errorMsg.includes('413') || errorMsg.includes('muy grande')) {
+        alert('📦 El archivo es demasiado grande. El límite máximo es de 500MB.');
+      } else {
+        alert(`❌ Error subiendo archivo: ${errorMsg}`);
+      }
     }
   };
 
@@ -905,15 +933,27 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Subiendo archivo...</h3>
             {uploadFileName && (
-              <p className="text-sm text-gray-600 mb-2 truncate">{uploadFileName}</p>
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2 truncate">{uploadFileName}</p>
+                <p className="text-xs text-gray-500">
+                  {uploadProgress < 10 ? 'Preparando subida...' :
+                   uploadProgress >= 95 ? 'Finalizando...' :
+                   'Subiendo archivo...'}
+                </p>
+              </div>
             )}
-            <div className="w-full bg-gray-200 rounded-full h-4">
+            <div className="w-full bg-gray-200 rounded-full h-4 mb-2">
               <div 
                 className="bg-blue-600 h-4 rounded-full transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
             </div>
-            <p className="text-center text-gray-600 mt-2">{uploadProgress}%</p>
+            <p className="text-center text-gray-600">{uploadProgress}%</p>
+            {uploadProgress < 5 && (
+              <p className="text-xs text-center text-gray-500 mt-2">
+                Para archivos grandes esto puede tomar varios minutos...
+              </p>
+            )}
           </div>
         </div>
       )}
