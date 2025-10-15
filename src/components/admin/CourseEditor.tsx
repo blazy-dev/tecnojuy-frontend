@@ -511,7 +511,15 @@ export default function CourseEditor({ courseId, courseName, onClose }: CourseEd
       
       // Mostrar mensaje de error más específico
       const errorMsg = e.message || 'Error desconocido durante la subida';
-      if (errorMsg.includes('timeout') || errorMsg.includes('agotado')) {
+      if (errorMsg.includes('Timeout:')) {
+        // Caso especial: timeout pero posible subida exitosa
+        const shouldCheck = confirm('⏰ La subida tomó mucho tiempo pero el archivo pudo haberse subido. ¿Quieres recargar para verificar?');
+        if (shouldCheck) {
+          await loadChapters();
+          return; // Salir sin mostrar error si el usuario eligió verificar
+        }
+        alert(errorMsg);
+      } else if (errorMsg.includes('timeout') || errorMsg.includes('agotado')) {
         alert('⏰ La subida tomó demasiado tiempo. Para archivos muy grandes, intenta con una conexión más estable o divide el archivo.');
       } else if (errorMsg.includes('413') || errorMsg.includes('muy grande')) {
         alert('📦 El archivo es demasiado grande. El límite máximo es de 500MB.');

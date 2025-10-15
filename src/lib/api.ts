@@ -468,7 +468,8 @@ class ApiClient {
           xhr.withCredentials = true;
           
           // Configurar timeouts para archivos grandes
-          xhr.timeout = 300000; // 5 minutos para archivos grandes
+          const isLargeFile = file.size > 50 * 1024 * 1024; // 50MB
+          xhr.timeout = isLargeFile ? 600000 : 120000; // 10 min para grandes, 2 min para normales
           
           // Añadir token de autorización si está disponible
           if (typeof window !== 'undefined') {
@@ -519,7 +520,8 @@ class ApiClient {
           
           xhr.ontimeout = () => {
             clearInterval(stallCheckInterval);
-            reject(new Error('Tiempo de espera agotado. El archivo es muy grande o la conexión es lenta.'));
+            console.warn(`⏰ Upload timeout after ${xhr.timeout/1000}s for file ${file.name}`);
+            reject(new Error(`Timeout: La subida tomó más de ${xhr.timeout/60000} minutos. El archivo puede haberse subido correctamente, verifica antes de reintentar.`));
           };
 
           xhr.onload = async () => {
@@ -544,7 +546,7 @@ class ApiClient {
                 const xhr2 = new XMLHttpRequest();
                 xhr2.open('POST', getApiUrl('/storage/proxy-upload'));
                 xhr2.withCredentials = true;
-                xhr2.timeout = 300000; // 5 minutos
+                xhr2.timeout = isLargeFile ? 600000 : 120000; // 10 min para grandes, 2 min para normales
                 
                 // Añadir token de autorización para el retry también
                 if (typeof window !== 'undefined') {
