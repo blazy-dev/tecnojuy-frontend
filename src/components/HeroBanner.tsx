@@ -85,7 +85,7 @@ export default function HeroBanner({
   if (activeBanners.length === 0) return null;
 
   return (
-    <section className="relative h-[70vh] md:h-[80vh] overflow-hidden">
+    <section className="relative h-[85vh] sm:h-[75vh] md:h-[80vh] overflow-hidden">
       {/* Banner Slides */}
       <div className="relative h-full">
         {activeBanners.map((banner, index) => (
@@ -99,9 +99,9 @@ export default function HeroBanner({
                   : 'translate-x-full'
             }`}
           >
-            {/* Background Image */}
+            {/* Background Image - Mejor posicionamiento en móvil */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              className="absolute inset-0 bg-cover bg-no-repeat bg-[center_35%] sm:bg-center"
               style={{ backgroundImage: `url(${banner.image})` }}
             >
               {/* Overlay con gradiente de colores principales */}
@@ -110,20 +110,20 @@ export default function HeroBanner({
 
             {/* Content */}
             <div className="relative z-10 h-full flex items-center">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 w-full">
                 <div className="max-w-3xl">
                   {/* Subtitle */}
-                  <p className="text-[#00cc66] font-semibold text-lg mb-4 animate-fade-in-up delay-100">
+                  <p className="text-[#00cc66] font-semibold text-sm sm:text-base md:text-lg mb-3 md:mb-4 animate-fade-in-up delay-100">
                     {banner.subtitle}
                   </p>
                   
-                  {/* Title */}
-                  <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight animate-fade-in-up delay-200">
+                  {/* Title - Responsivo mejorado */}
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 md:mb-6 leading-tight animate-fade-in-up delay-200">
                     {banner.title}
                   </h1>
                   
                   {/* Description */}
-                  <p className="text-xl text-gray-200 mb-8 leading-relaxed animate-fade-in-up delay-300">
+                  <p className="text-base sm:text-lg md:text-xl text-gray-200 mb-6 md:mb-8 leading-relaxed animate-fade-in-up delay-300">
                     {banner.description}
                   </p>
                   
@@ -131,10 +131,10 @@ export default function HeroBanner({
                   <div className="animate-fade-in-up delay-400">
                     <a 
                       href={banner.ctaLink}
-                      className="inline-flex items-center px-8 py-4 bg-[#00cc66] hover:bg-[#00b359] text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                      className="inline-flex items-center px-6 py-3 md:px-8 md:py-4 bg-[#00cc66] hover:bg-[#00b359] text-white font-semibold text-sm md:text-base rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                     >
                       {banner.ctaText}
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="ml-2 w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>
                     </a>
@@ -146,37 +146,37 @@ export default function HeroBanner({
         ))}
       </div>
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows - Separados del contenido en móvil */}
       {activeBanners.length > 1 && (
         <>
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
             aria-label="Banner anterior"
           >
-            <ChevronLeftIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+            <ChevronLeftIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
           </button>
           
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 group"
             aria-label="Banner siguiente"
           >
-            <ChevronRightIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+            <ChevronRightIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
           </button>
         </>
       )}
 
       {/* Dots Indicator */}
       {activeBanners.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+        <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-2 sm:space-x-3">
           {activeBanners.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
                 index === currentSlide 
-                  ? 'bg-[#00cc66] w-8' 
+                  ? 'bg-[#00cc66] w-6 sm:w-8' 
                   : 'bg-white/50 hover:bg-white/80'
               }`}
               aria-label={`Ir al banner ${index + 1}`}
@@ -185,8 +185,8 @@ export default function HeroBanner({
         </div>
       )}
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-8 z-20 text-white/70 animate-bounce">
+      {/* Scroll Indicator - Oculto en móvil */}
+      <div className="hidden sm:block absolute bottom-8 left-8 z-20 text-white/70 animate-bounce">
         <div className="flex flex-col items-center">
           <span className="text-sm mb-2">Scroll</span>
           <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
