@@ -687,9 +687,9 @@ function EditCourseInfoModal({ course, onSave, onClose }: EditCourseInfoModalPro
         return;
       }
       
-      // Validar tamaño (máximo 100MB para videos)
-      if (file.size > 100 * 1024 * 1024) {
-        alert('El video es demasiado grande. Máximo 100MB.');
+      // Validar tamaño (máximo 500MB para videos)
+      if (file.size > 500 * 1024 * 1024) {
+        alert('El video es demasiado grande. Máximo 500MB.');
         return;
       }
 
@@ -813,7 +813,7 @@ function EditCourseInfoModal({ course, onSave, onClose }: EditCourseInfoModalPro
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    MP4, WebM hasta 100MB. Se subirá al bucket público (visible sin login)
+                    MP4, WebM hasta 500MB. Se subirá al bucket público (visible sin login)
                   </p>
                 </div>
                 {trailerPreview && (
