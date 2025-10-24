@@ -298,7 +298,6 @@ export const prerender = false;
                 class="w-full h-full object-contain"
                 controls
                 autoplay
-                muted
                 playsinline
                 preload="metadata"
                 poster="${course.cover_image_url || ''}"
@@ -617,14 +616,28 @@ export const prerender = false;
   }
 
   function updateCourseInfo(course: Course) {
+    // Primero la imagen si existe
+    let imageHtml = '';
+    if (course.cover_image_url) {
+      imageHtml = `
+        <div class="mb-4">
+          <img 
+            src="${course.cover_image_url}" 
+            alt="${course.title}" 
+            class="w-full rounded-lg object-cover aspect-video"
+          />
+        </div>
+      `;
+    }
+    
     const info = [
-      course.level ? `<div class="flex justify-between"><span>Nivel:</span><span>${course.level}</span></div>` : '',
-      course.language ? `<div class="flex justify-between"><span>Idioma:</span><span>${course.language}</span></div>` : '',
-      course.category ? `<div class="flex justify-between"><span>Categoría:</span><span>${course.category}</span></div>` : '',
-      course.estimated_duration_hours ? `<div class="flex justify-between"><span>Duración:</span><span>${course.estimated_duration_hours}h</span></div>` : ''
+      course.level ? `<div class="flex justify-between"><span>Nivel:</span><span class="font-medium">${course.level}</span></div>` : '',
+      course.language ? `<div class="flex justify-between"><span>Idioma:</span><span class="font-medium">${course.language}</span></div>` : '',
+      course.category ? `<div class="flex justify-between"><span>Categoría:</span><span class="font-medium">${course.category}</span></div>` : '',
+      course.estimated_duration_hours ? `<div class="flex justify-between"><span>Duración:</span><span class="font-medium">${course.estimated_duration_hours}h</span></div>` : ''
     ].filter(Boolean).join('');
     
-    courseInfoEl.innerHTML = info;
+    courseInfoEl.innerHTML = imageHtml + info;
   }
 
   // Función para abrir lección por índice
