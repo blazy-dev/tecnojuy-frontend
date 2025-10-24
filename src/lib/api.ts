@@ -750,6 +750,22 @@ class ApiClient {
     return this.handleResponse<any>(response);
   }
 
+  async getLessonMediaUrl(lessonId: number, mediaType: 'video' | 'file'): Promise<{
+    media_type: string;
+    url: string;
+    expires_in_seconds: number | null;
+    expires_in_minutes: number | null;
+  }> {
+    const response = await fetch(
+      getApiUrl(`/courses/lessons/${lessonId}/media-url?media_type=${mediaType}`), 
+      {
+        credentials: 'include',
+        headers: this.getHeaders()
+      }
+    );
+    return this.handleResponse<any>(response);
+  }
+
   async markLessonComplete(lessonId: number): Promise<any> {
     const response = await fetch(getApiUrl(`/courses/lessons/${lessonId}/complete`), {
       method: 'POST',
