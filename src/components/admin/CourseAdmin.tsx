@@ -164,7 +164,7 @@ function CourseAdminContent() {
     setShowEditModal(true);
   };
 
-  const handleUpdateCourse = async (courseData: any, coverFile?: File) => {
+  const handleUpdateCourse = async (courseData: any, coverFile?: File, trailerFile?: File) => {
     if (!editingCourse) return;
 
     try {
@@ -175,6 +175,14 @@ function CourseAdminContent() {
         console.log('🔄 Subiendo portada...');
         const uploadResult = await api.uploadFileProxy(coverFile, 'courses/covers');
         updatedData.cover_image_url = uploadResult.public_url;
+      }
+
+      // Si hay archivo de trailer, subirlo al bucket público
+      if (trailerFile) {
+        console.log('🔄 Subiendo trailer (público)...');
+        const uploadResult = await api.uploadFileToPublicBucket(trailerFile, 'courses/trailers');
+        updatedData.trailer_video_url = uploadResult.public_url;
+        console.log('✅ Trailer subido:', uploadResult.public_url);
       }
 
       console.log('🔄 Actualizando curso...');
@@ -621,7 +629,7 @@ function CourseAdminContent() {
 // Componente Modal para Editar Info del Curso
 interface EditCourseInfoModalProps {
   course: Course;
-  onSave: (courseData: any, coverFile?: File) => Promise<void>;
+  onSave: (courseData: any, coverFile?: File, trailerFile?: File) => Promise<void>;
   onClose: () => void;
 }
 
@@ -640,6 +648,8 @@ function EditCourseInfoModal({ course, onSave, onClose }: EditCourseInfoModalPro
   });
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(course.cover_image_url || null);
+  const [trailerFile, setTrailerFile] = useState<File | null>(null);
+  const [trailerPreview, setTrailerPreview] = useState<string | null>(course.trailer_video_url || null);
   const [saving, setSaving] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -668,12 +678,35 @@ function EditCourseInfoModal({ course, onSave, onClose }: EditCourseInfoModalPro
     }
   };
 
+  const handleTrailerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('video/')) {
+        alert('Por favor selecciona un archivo de video válido (MP4, WebM, etc.)');
+        return;
+      }
+      
+      // Validar tamaño (máximo 100MB para videos)
+      if (file.size > 100 * 1024 * 1024) {
+        alert('El video es demasiado grande. Máximo 100MB.');
+        return;
+      }
+
+      setTrailerFile(file);
+      
+      // Crear preview URL para video
+      const videoUrl = URL.createObjectURL(file);
+      setTrailerPreview(videoUrl);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     
     try {
-      await onSave(formData, coverFile || undefined);
+      await onSave(formData, coverFile || undefined, trailerFile || undefined);
     } catch (error) {
       console.error('Error guardando curso:', error);
     } finally {
@@ -761,6 +794,37 @@ function EditCourseInfoModal({ course, onSave, onClose }: EditCourseInfoModalPro
                       alt="Preview"
                       className="w-full h-full object-cover rounded-lg border"
                     />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Video de Presentación (Trailer) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                🎬 Video de Presentación (Trailer)
+              </label>
+              <div className="mt-1 flex items-center space-x-4">
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleTrailerChange}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    MP4, WebM hasta 100MB. Se subirá al bucket público (visible sin login)
+                  </p>
+                </div>
+                {trailerPreview && (
+                  <div className="w-32 h-20">
+                    <video
+                      src={trailerPreview}
+                      controls
+                      className="w-full h-full object-cover rounded-lg border"
+                    >
+                      Tu navegador no soporta video
+                    </video>
                   </div>
                 )}
               </div>

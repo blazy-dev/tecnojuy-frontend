@@ -700,6 +700,96 @@ class ApiClient {
     return this.handleResponse<any>(response);
   }
 
+  // Subir archivo al bucket PÚBLICO (para trailers de cursos)
+  async uploadFileToPublicBucket(file: File, folder: string = 'courses/trailers', onProgress?: (percent: number) => void): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+
+    // If onProgress is provided, use XHR to track upload progress
+    if (onProgress) {
+      const doUpload = (): Promise<any> => new Promise((resolve, reject) => {
+        try {
+          const xhr = new XMLHttpRequest();
+          
+          xhr.open('POST', getApiUrl('/storage/upload-to-public'), true);
+          xhr.withCredentials = true;
+          
+          const isLargeFile = file.size > 50 * 1024 * 1024; // 50MB
+          xhr.timeout = isLargeFile ? 600000 : 120000; // 10 min para grandes, 2 min para normales
+          
+          // Añadir token de autorización si está disponible
+          if (typeof window !== 'undefined') {
+            const accessToken = localStorage.getItem('access_token');
+            if (accessToken) {
+              xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+            }
+          }
+
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percent = Math.round((event.loaded / event.total) * 100);
+              const smoothPercent = Math.min(99, Math.max(1, percent));
+              onProgress(smoothPercent);
+              console.log(`📊 Public upload progress: ${percent}% (${(event.loaded / 1024 / 1024).toFixed(1)}MB / ${(event.total / 1024 / 1024).toFixed(1)}MB)`);
+            }
+          };
+
+          xhr.onerror = () => {
+            reject(new Error('Error de red durante la carga del archivo'));
+          };
+          
+          xhr.ontimeout = () => {
+            reject(new Error('Tiempo de espera agotado. El archivo es muy grande o la conexión es lenta.'));
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const json = JSON.parse(xhr.responseText || '{}');
+                onProgress(100);
+                resolve(json);
+              } catch (e) {
+                reject(new Error('Respuesta inválida del servidor'));
+              }
+            } else if (xhr.status === 401) {
+              reject(new Error('No autorizado'));
+            } else {
+              console.error(`❌ Upload failed with status ${xhr.status}:`, xhr.responseText);
+              reject(new Error(`Error de carga: ${xhr.status} ${xhr.statusText}`));
+            }
+          };
+
+          console.log(`🚀 Starting PUBLIC upload of ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+          xhr.send(formData);
+        } catch (e) {
+          console.error('❌ Upload error:', e);
+          reject(e);
+        }
+      });
+
+      return doUpload();
+    }
+
+    // Fallback: no progress, use fetch
+    const headers = new Headers();
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('access_token');
+      if (accessToken) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
+      }
+    }
+    
+    const response = await fetch(getApiUrl('/storage/upload-to-public'), {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: formData
+    });
+
+    return this.handleResponse<any>(response);
+  }
+
   // ===== NUEVOS MÉTODOS PARA PÁGINAS PÚBLICAS DE CURSOS =====
 
   async getCoursesPublic(): Promise<any[]> {
