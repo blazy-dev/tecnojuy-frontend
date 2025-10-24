@@ -164,7 +164,12 @@ function CourseAdminContent() {
     setShowEditModal(true);
   };
 
-  const handleUpdateCourse = async (courseData: any, coverFile?: File, trailerFile?: File) => {
+  const handleUpdateCourse = async (
+    courseData: any, 
+    coverFile?: File, 
+    trailerFile?: File,
+    onProgress?: (type: 'cover' | 'trailer', percent: number) => void
+  ) => {
     if (!editingCourse) return;
 
     try {
@@ -173,14 +178,22 @@ function CourseAdminContent() {
       // Si hay archivo de portada, subirlo primero
       if (coverFile) {
         console.log('🔄 Subiendo portada...');
-        const uploadResult = await api.uploadFileProxy(coverFile, 'courses/covers');
+        const uploadResult = await api.uploadFileProxy(
+          coverFile, 
+          'courses/covers',
+          (percent) => onProgress?.('cover', percent)
+        );
         updatedData.cover_image_url = uploadResult.public_url;
       }
 
       // Si hay archivo de trailer, subirlo al bucket público
       if (trailerFile) {
         console.log('🔄 Subiendo trailer (público)...');
-        const uploadResult = await api.uploadFileToPublicBucket(trailerFile, 'courses/trailers');
+        const uploadResult = await api.uploadFileToPublicBucket(
+          trailerFile, 
+          'courses/trailers',
+          (percent) => onProgress?.('trailer', percent)
+        );
         updatedData.trailer_video_url = uploadResult.public_url;
         console.log('✅ Trailer subido:', uploadResult.public_url);
       }
@@ -629,7 +642,7 @@ function CourseAdminContent() {
 // Componente Modal para Editar Info del Curso
 interface EditCourseInfoModalProps {
   course: Course;
-  onSave: (courseData: any, coverFile?: File, trailerFile?: File) => Promise<void>;
+  onSave: (courseData: any, coverFile?: File, trailerFile?: File, onProgress?: (type: 'cover' | 'trailer', percent: number) => void) => Promise<void>;
   onClose: () => void;
 }
 
@@ -651,6 +664,7 @@ function EditCourseInfoModal({ course, onSave, onClose }: EditCourseInfoModalPro
   const [trailerFile, setTrailerFile] = useState<File | null>(null);
   const [trailerPreview, setTrailerPreview] = useState<string | null>(course.trailer_video_url || null);
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ type: 'cover' | 'trailer' | null, percent: number }>({ type: null, percent: 0 });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -704,13 +718,22 @@ function EditCourseInfoModal({ course, onSave, onClose }: EditCourseInfoModalPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setUploadProgress({ type: null, percent: 0 });
     
     try {
-      await onSave(formData, coverFile || undefined, trailerFile || undefined);
+      await onSave(
+        formData, 
+        coverFile || undefined, 
+        trailerFile || undefined,
+        (type, percent) => {
+          setUploadProgress({ type, percent });
+        }
+      );
     } catch (error) {
       console.error('Error guardando curso:', error);
     } finally {
       setSaving(false);
+      setUploadProgress({ type: null, percent: 0 });
     }
   };
 
@@ -932,6 +955,29 @@ function EditCourseInfoModal({ course, onSave, onClose }: EditCourseInfoModalPro
               </div>
             )}
           </div>
+
+          {/* Barra de Progreso de Subida */}
+          {saving && uploadProgress.type && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-blue-900">
+                  {uploadProgress.type === 'cover' ? '📸 Subiendo portada...' : '🎬 Subiendo trailer...'}
+                </span>
+                <span className="text-sm font-bold text-blue-900">
+                  {uploadProgress.percent}%
+                </span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${uploadProgress.percent}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-blue-700 mt-2">
+                Por favor espera, los archivos grandes pueden tardar varios minutos...
+              </p>
+            </div>
+          )}
 
           {/* Botones */}
           <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
