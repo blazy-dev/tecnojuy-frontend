@@ -20,6 +20,7 @@ interface Course {
   estimated_duration_hours?: number;
   created_at: string;
   cover_image_url?: string;
+  trailer_video_url?: string;  // Video de presentación del curso
 }
 
 interface CourseCreate {
