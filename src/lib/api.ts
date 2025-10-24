@@ -706,7 +706,7 @@ class ApiClient {
       // 1. Obtener URL firmada del backend
       const formData = new FormData();
       formData.append('filename', file.name);
-      formData.append('content_type', file.type);
+      formData.append('content_type', file.type || 'application/octet-stream');
       formData.append('folder', folder);
 
       console.log(`🔑 Getting presigned URL for ${file.name}...`);
@@ -734,60 +734,85 @@ class ApiClient {
       const { upload_url, public_url, object_key, filename } = await urlResponse.json();
       console.log(`✅ Got presigned URL for ${object_key}`);
 
-      // 2. Subir archivo directamente a R2 usando la URL firmada
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        
-        xhr.open('PUT', upload_url, true);
-        // NO enviar credenciales a R2, solo el archivo
-        xhr.withCredentials = false;
-        
-        // Configurar content-type
-        xhr.setRequestHeader('Content-Type', file.type);
-        
-        const isLargeFile = file.size > 50 * 1024 * 1024; // 50MB
-        xhr.timeout = isLargeFile ? 600000 : 120000; // 10 min para grandes, 2 min para normales
+      // 2. Subir archivo directamente a R2 usando fetch (evita problemas de CORS)
+      console.log(`🚀 Starting DIRECT upload to R2 for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+      
+      // Para archivos grandes, necesitamos usar XHR con progress tracking
+      if (onProgress && file.size > 10 * 1024 * 1024) { // 10MB+
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          
+          xhr.open('PUT', upload_url, true);
+          xhr.withCredentials = false;
+          
+          // IMPORTANTE: No setear ningún header adicional
+          // La presigned URL ya incluye toda la autenticación necesaria
+          
+          const isLargeFile = file.size > 50 * 1024 * 1024;
+          xhr.timeout = isLargeFile ? 900000 : 300000; // 15 min grandes, 5 min normales
 
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable && onProgress) {
-            const percent = Math.round((event.loaded / event.total) * 100);
-            const smoothPercent = Math.min(99, Math.max(1, percent));
-            onProgress(smoothPercent);
-            console.log(`📊 Public upload progress: ${percent}% (${(event.loaded / 1024 / 1024).toFixed(1)}MB / ${(event.total / 1024 / 1024).toFixed(1)}MB)`);
-          }
-        };
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable && onProgress) {
+              const percent = Math.round((event.loaded / event.total) * 100);
+              const smoothPercent = Math.min(99, Math.max(1, percent));
+              onProgress(smoothPercent);
+              console.log(`📊 Upload progress: ${percent}% (${(event.loaded / 1024 / 1024).toFixed(1)}MB / ${(event.total / 1024 / 1024).toFixed(1)}MB)`);
+            }
+          };
 
-        xhr.onerror = () => {
-          console.error('❌ XHR error during upload');
-          reject(new Error('Error de red durante la carga del archivo'));
-        };
-        
-        xhr.ontimeout = () => {
-          console.error('❌ XHR timeout');
-          reject(new Error('Tiempo de espera agotado. El archivo es muy grande o la conexión es lenta.'));
-        };
+          xhr.onerror = () => {
+            console.error('❌ XHR error during upload');
+            reject(new Error('Error de red durante la carga del archivo'));
+          };
+          
+          xhr.ontimeout = () => {
+            console.error('❌ XHR timeout');
+            reject(new Error('Tiempo de espera agotado. El archivo es muy grande o la conexión es lenta.'));
+          };
 
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            console.log(`✅ Upload successful: ${public_url}`);
-            if (onProgress) onProgress(100);
-            // Devolver el mismo formato que el endpoint antiguo
-            resolve({
-              public_url,
-              object_key,
-              filename,
-              content_type: file.type,
-              size: file.size
-            });
-          } else {
-            console.error(`❌ Upload failed with status ${xhr.status}:`, xhr.responseText);
-            reject(new Error(`Error de carga: ${xhr.status} ${xhr.statusText}`));
-          }
-        };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              console.log(`✅ Upload successful: ${public_url}`);
+              if (onProgress) onProgress(100);
+              resolve({
+                public_url,
+                object_key,
+                filename,
+                content_type: file.type,
+                size: file.size
+              });
+            } else {
+              console.error(`❌ Upload failed with status ${xhr.status}:`, xhr.responseText);
+              reject(new Error(`Error de carga: ${xhr.status} ${xhr.statusText}`));
+            }
+          };
 
-        console.log(`🚀 Starting DIRECT upload to R2 for ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
-        xhr.send(file); // Enviar el archivo directamente, no FormData
+          // Enviar el archivo raw, no en FormData
+          xhr.send(file);
+        });
+      }
+
+      // Para archivos pequeños, usar fetch simple
+      const uploadResponse = await fetch(upload_url, {
+        method: 'PUT',
+        body: file,
+        // No mode: 'no-cors' porque necesitamos ver la respuesta
       });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.status}`);
+      }
+
+      console.log(`✅ Upload successful: ${public_url}`);
+      if (onProgress) onProgress(100);
+
+      return {
+        public_url,
+        object_key,
+        filename,
+        content_type: file.type,
+        size: file.size
+      };
     } catch (error) {
       console.error('❌ Error in uploadFileToPublicBucket:', error);
       throw error;
