@@ -34,6 +34,7 @@ function AdminAlumnosContent() {
   const [processingUser, setProcessingUser] = useState<number | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showCourseModal, setShowCourseModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Verificar que sea admin
   if (!loading && (!user || user.role_name !== 'admin')) {
@@ -192,7 +193,21 @@ function AdminAlumnosContent() {
     );
   }
 
-  const alumnos = students.filter(student => student.role_name === 'alumno');
+  // Filtrar solo alumnos (no admins) y ordenar por fecha de registro (más recientes primero)
+  const alumnos = students
+    .filter(student => student.role_name === 'alumno')
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  
+  // Filtrar por búsqueda (nombre o email)
+  const filteredAlumnos = alumnos.filter(student => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      student.name.toLowerCase().includes(query) ||
+      student.email.toLowerCase().includes(query)
+    );
+  });
+  
   const premiumCount = alumnos.filter(student => student.has_premium_access).length;
 
   return (
@@ -280,25 +295,59 @@ function AdminAlumnosContent() {
         {/* Students List */}
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              Lista de Alumnos
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Gestiona el acceso premium de cada alumno individualmente
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Lista de Alumnos
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                  Gestiona el acceso premium de cada alumno individualmente
+                </p>
+              </div>
+              
+              {/* Buscador */}
+              <div className="relative flex-1 max-w-md">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
           
-          {alumnos.length === 0 ? (
+          {filteredAlumnos.length === 0 ? (
             <div className="text-center py-12">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
               </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No hay alumnos registrados</h3>
-              <p className="mt-1 text-sm text-gray-500">Los alumnos aparecerán aquí cuando se registren.</p>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                {searchQuery ? 'No se encontraron alumnos' : 'No hay alumnos registrados'}
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchQuery ? 'Intenta con otro término de búsqueda.' : 'Los alumnos aparecerán aquí cuando se registren.'}
+              </p>
             </div>
           ) : (
             <ul className="divide-y divide-gray-200">
-              {alumnos.map((student) => (
+              {filteredAlumnos.map((student) => (
                 <li key={student.id} className="px-4 py-4 sm:px-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
