@@ -111,43 +111,33 @@ const navItems = [
   });
 
   // Hide auth-only navigation items if user is not logged in
-  async function updateAuthOnlyLinks() {
+  function updateAuthOnlyLinks() {
     // Get all links with data-auth-only="true"
     const authOnlyLinks = document.querySelectorAll('[data-auth-only="true"]');
     
-    // Hide them immediately on page load to prevent flash
-    authOnlyLinks.forEach(link => {
-      (link as HTMLElement).style.display = 'none';
-    });
-    
-    // Check if user is logged in using the same endpoint as AuthContext
-    try {
-      const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:8000'}/auth/session`, {
-        credentials: 'include'
-      });
+    // Check if user is authenticated by looking for auth data in the page
+    // The AuthSection component will set this when it loads
+    const checkAuth = () => {
+      // Try to get auth state from window object (set by AuthContext)
+      const isAuthenticated = (window as any).__AUTH_USER__ !== null && (window as any).__AUTH_USER__ !== undefined;
       
-      console.log('[Navbar] Response status:', response.status, response.ok);
-      
-      const sessionData = await response.json().catch(() => ({}));
-      console.log('[Navbar] Session data:', JSON.stringify(sessionData, null, 2));
-      
-      const isAuthenticated = sessionData.authenticated && sessionData.user;
-      
-      console.log('[Navbar] Auth check result:', { isAuthenticated, hasUser: !!sessionData.user, authenticated: sessionData.authenticated });
-      
-      // Show links only if authenticated
-      if (isAuthenticated) {
-        authOnlyLinks.forEach(link => {
+      authOnlyLinks.forEach(link => {
+        if (isAuthenticated) {
           (link as HTMLElement).style.display = '';
-        });
-        console.log('[Navbar] Showing', authOnlyLinks.length, 'auth-only links');
-      } else {
-        console.log('[Navbar] User not authenticated, keeping links hidden');
-      }
-    } catch (error) {
-      // If there's an error checking auth, keep links hidden (already hidden above)
-      console.log('[Navbar] Auth check failed:', error);
-    }
+        } else {
+          (link as HTMLElement).style.display = 'none';
+        }
+      });
+    };
+    
+    // Initial check
+    checkAuth();
+    
+    // Recheck periodically to catch auth changes
+    const interval = setInterval(checkAuth, 100);
+    
+    // Stop checking after 5 seconds
+    setTimeout(() => clearInterval(interval), 5000);
   }
 
   // Run on page load

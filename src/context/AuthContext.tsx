@@ -24,6 +24,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Sync user state with window object for navbar
+  React.useEffect(() => {
+    (window as any).__AUTH_USER__ = user;
+  }, [user]);
+
   const login = () => {
     window.location.href = getApiUrl(config.endpoints.auth.googleLogin);
   };
