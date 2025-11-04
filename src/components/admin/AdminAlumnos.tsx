@@ -60,24 +60,39 @@ function AdminAlumnosContent() {
   useEffect(() => {
     loadStudents();
     loadCourses();
-  }, [currentPage, selectedCourseFilter]); // Recargar cuando cambie la página o filtro
+  }, [selectedCourseFilter]); // Solo recargar cuando cambie el filtro
 
   const loadStudents = async () => {
     try {
       setLoadingStudents(true);
-      const skip = (currentPage - 1) * studentsPerPage;
       
-      const response = await api.getUsersPaginated({
-        skip,
-        limit: studentsPerPage,
-        role_name: 'alumno',
-        course_id: selectedCourseFilter || undefined
-      });
-      
-      setStudents(response.users);
-      setTotalStudents(response.total);
+      // Si hay filtro de curso, usar endpoint con paginación
+      if (selectedCourseFilter) {
+        const skip = (currentPage - 1) * studentsPerPage;
+        const response = await api.getUsersPaginated({
+          skip,
+          limit: studentsPerPage,
+          role_name: 'alumno',
+          course_id: selectedCourseFilter
+        });
+        setStudents(response.users);
+        setTotalStudents(response.total);
+      } else {
+        // Sin filtro, cargar todos los alumnos (endpoint antiguo)
+        const allUsers = await api.getUsers({ role_name: 'alumno', limit: 1000 });
+        setStudents(allUsers);
+        setTotalStudents(allUsers.length);
+      }
     } catch (error) {
       console.error('Error cargando alumnos:', error);
+      // Fallback: intentar con endpoint antiguo
+      try {
+        const allUsers = await api.getUsers({ role_name: 'alumno', limit: 1000 });
+        setStudents(allUsers);
+        setTotalStudents(allUsers.length);
+      } catch (fallbackError) {
+        console.error('Error en fallback:', fallbackError);
+      }
     } finally {
       setLoadingStudents(false);
     }
@@ -209,7 +224,7 @@ function AdminAlumnosContent() {
   }
   
   // Filtrar por búsqueda local (nombre o email)
-  const filteredAlumnos = students.filter(student => {
+  let filteredAlumnos = students.filter(student => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -218,8 +233,22 @@ function AdminAlumnosContent() {
     );
   });
   
+  // Si NO hay filtro de curso, hacer paginación manual en el frontend
+  let paginatedAlumnos = filteredAlumnos;
+  let totalPages = 1;
+  
+  if (!selectedCourseFilter) {
+    totalPages = Math.ceil(filteredAlumnos.length / studentsPerPage);
+    const startIndex = (currentPage - 1) * studentsPerPage;
+    const endIndex = startIndex + studentsPerPage;
+    paginatedAlumnos = filteredAlumnos.slice(startIndex, endIndex);
+  } else {
+    // Con filtro de curso, el backend ya paginó
+    paginatedAlumnos = filteredAlumnos;
+    totalPages = Math.ceil(totalStudents / studentsPerPage);
+  }
+  
   const premiumCount = students.filter(student => student.has_premium_access).length;
-  const totalPages = Math.ceil(totalStudents / studentsPerPage);
   
   const handleCourseFilterChange = (courseId: number | null) => {
     setSelectedCourseFilter(courseId);
@@ -229,6 +258,11 @@ function AdminAlumnosContent() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Si hay filtro de curso, recargar datos del servidor
+    if (selectedCourseFilter) {
+      loadStudents();
+    }
   };
 
   return (
@@ -386,7 +420,7 @@ function AdminAlumnosContent() {
             </div>
           </div>
           
-          {filteredAlumnos.length === 0 ? (
+          {paginatedAlumnos.length === 0 ? (
             <div className="text-center py-12">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
@@ -400,7 +434,7 @@ function AdminAlumnosContent() {
             </div>
           ) : (
             <ul className="divide-y divide-gray-200">
-              {filteredAlumnos.map((student) => (
+              {paginatedAlumnos.map((student) => (
                 <li key={student.id} className="px-4 py-4 sm:px-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
