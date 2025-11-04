@@ -112,14 +112,15 @@ const navItems = [
 
   // Hide auth-only navigation items if user is not logged in
   function updateAuthOnlyLinks() {
-    // Check if user is logged in by checking session cookie or making API call
+    // Check if user is logged in using the same endpoint as AuthContext
     const checkAuth = async () => {
       try {
-        const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:8000'}/auth/me`, {
+        const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:8000'}/auth/session`, {
           credentials: 'include'
         });
         
-        const isAuthenticated = response.ok;
+        const sessionData = await response.json().catch(() => ({}));
+        const isAuthenticated = sessionData.authenticated && sessionData.user;
         
         // Get all links with data-auth-only="true"
         const authOnlyLinks = document.querySelectorAll('[data-auth-only="true"]');
