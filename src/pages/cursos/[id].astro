@@ -376,13 +376,33 @@ export const prerender = false;
 
   function createChaptersList(chapters: Chapter[]): string {
     return chapters.map((chapter, chapterIndex) => `
-      <div class="border border-gray-200 dark:border-gray-600 rounded-lg mb-4">
-        <div class="bg-gray-50 dark:bg-gray-700 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-600">
-          <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">${chapter.title}</h3>
-          ${chapter.description ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${chapter.description}</p>` : ''}
-        </div>
+      <div class="border border-gray-200 dark:border-gray-600 rounded-lg mb-4 overflow-hidden">
+        <button 
+          class="w-full bg-gray-50 dark:bg-gray-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+          onclick="toggleChapter(${chapterIndex})"
+          aria-expanded="false"
+          id="chapter-toggle-${chapterIndex}"
+        >
+          <div class="text-left flex-1">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">${chapter.title}</h3>
+            ${chapter.description ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${chapter.description}</p>` : ''}
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">${chapter.lessons.length} ${chapter.lessons.length === 1 ? 'lección' : 'lecciones'}</p>
+          </div>
+          <svg 
+            class="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 flex-shrink-0 ml-4 chapter-chevron" 
+            id="chapter-chevron-${chapterIndex}"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
         
-        <div class="divide-y divide-gray-200 dark:divide-gray-600">
+        <div 
+          class="divide-y divide-gray-200 dark:divide-gray-600 hidden" 
+          id="chapter-content-${chapterIndex}"
+        >
           ${chapter.lessons.map((lesson, lessonIndex) => `
             <div class="px-3 sm:px-6 py-3 sm:py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <!-- Layout Desktop -->
@@ -880,6 +900,29 @@ export const prerender = false;
     }
   }
 
+  // Función para toggle del acordeón de capítulos
+  function toggleChapter(chapterIndex: number) {
+    const contentEl = document.getElementById(`chapter-content-${chapterIndex}`);
+    const toggleBtn = document.getElementById(`chapter-toggle-${chapterIndex}`);
+    const chevronEl = document.getElementById(`chapter-chevron-${chapterIndex}`);
+    
+    if (!contentEl || !toggleBtn || !chevronEl) return;
+    
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    
+    if (isExpanded) {
+      // Cerrar
+      contentEl.classList.add('hidden');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      chevronEl.style.transform = 'rotate(0deg)';
+    } else {
+      // Abrir
+      contentEl.classList.remove('hidden');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      chevronEl.style.transform = 'rotate(180deg)';
+    }
+  }
+
   // Event listeners
   closeLessonModal.addEventListener('click', () => {
     lessonModal.classList.add('hidden');
@@ -899,6 +942,7 @@ export const prerender = false;
   // Hacer las funciones globales para que funcionen desde onclick
   (window as any).openLesson = openLesson;
   (window as any).openLessonByIndex = openLessonByIndex;
+  (window as any).toggleChapter = toggleChapter;
 
   // Cargar estructura del curso al inicializar
   if (courseId) {
