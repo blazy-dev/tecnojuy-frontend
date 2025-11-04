@@ -111,38 +111,39 @@ const navItems = [
   });
 
   // Hide auth-only navigation items if user is not logged in
-  function updateAuthOnlyLinks() {
+  async function updateAuthOnlyLinks() {
     // Get all links with data-auth-only="true"
     const authOnlyLinks = document.querySelectorAll('[data-auth-only="true"]');
     
     // Hide them immediately on page load to prevent flash
     authOnlyLinks.forEach(link => {
-      link.style.display = 'none';
+      (link as HTMLElement).style.display = 'none';
     });
     
     // Check if user is logged in using the same endpoint as AuthContext
-    const checkAuth = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:8000'}/auth/session`, {
-          credentials: 'include'
+    try {
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:8000'}/auth/session`, {
+        credentials: 'include'
+      });
+      
+      const sessionData = await response.json().catch(() => ({}));
+      const isAuthenticated = sessionData.authenticated && sessionData.user;
+      
+      console.log('[Navbar] Auth check result:', { isAuthenticated, sessionData });
+      
+      // Show links only if authenticated
+      if (isAuthenticated) {
+        authOnlyLinks.forEach(link => {
+          (link as HTMLElement).style.display = '';
         });
-        
-        const sessionData = await response.json().catch(() => ({}));
-        const isAuthenticated = sessionData.authenticated && sessionData.user;
-        
-        // Show links only if authenticated
-        if (isAuthenticated) {
-          authOnlyLinks.forEach(link => {
-            link.style.display = '';
-          });
-        }
-      } catch (error) {
-        // If there's an error checking auth, keep links hidden (already hidden above)
-        console.log('Auth check failed, keeping auth-only links hidden');
+        console.log('[Navbar] Showing', authOnlyLinks.length, 'auth-only links');
+      } else {
+        console.log('[Navbar] User not authenticated, keeping links hidden');
       }
-    };
-
-    checkAuth();
+    } catch (error) {
+      // If there's an error checking auth, keep links hidden (already hidden above)
+      console.log('[Navbar] Auth check failed:', error);
+    }
   }
 
   // Run on page load
