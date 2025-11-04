@@ -591,23 +591,75 @@ export const prerender = false;
       console.error('❌ Error cargando lección:', error);
       lessonLoading.classList.add('hidden');
       
-      lessonTextContent.innerHTML = `
-        <div class="flex items-center justify-center h-full text-center">
-          <div>
-            <div class="text-red-400 text-6xl mb-4">❌</div>
-            <h3 class="text-xl font-bold text-white mb-2">Error al cargar la lección</h3>
-            <p class="text-gray-300 mb-4">
-              ${error instanceof Error && error.message.includes('403') 
-                ? 'No tienes acceso a esta lección. Contacta al administrador.' 
-                : 'Error de conexión. Intenta nuevamente.'
-              }
-            </p>
-            <button 
-              onclick="openLesson(${lessonId}, '${lessonTitle}', ${isFree})"
-              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+      // Determinar el tipo de error
+      let errorIcon = '❌';
+      let errorTitle = 'Error al cargar la lección';
+      let errorMessage = 'Error de conexión. Intenta nuevamente.';
+      let showRetryButton = true;
+      let actionButton = '';
+      
+      if (error instanceof Error) {
+        const errorStatus = (error as any).status;
+        
+        if (errorStatus === 401) {
+          // No autenticado
+          errorIcon = '🔒';
+          errorTitle = 'Inicia sesión para continuar';
+          errorMessage = 'Debes iniciar sesión para acceder a esta lección.';
+          showRetryButton = false;
+          actionButton = `
+            <a 
+              href="/login?redirect=/cursos/${courseId}"
+              class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-block"
             >
-              🔄 Intentar de nuevo
-            </button>
+              🔑 Iniciar Sesión
+            </a>
+          `;
+        } else if (errorStatus === 403 || error.message.includes('403')) {
+          // Sin acceso
+          errorIcon = '🚫';
+          errorTitle = 'Acceso restringido';
+          errorMessage = isFree 
+            ? 'Esta lección gratuita requiere que inicies sesión.' 
+            : 'No tienes acceso a esta lección premium. Contacta al administrador para obtener acceso al curso.';
+          showRetryButton = false;
+          actionButton = errorStatus === 403 && !isFree ? `
+            <div class="space-y-3">
+              <p class="text-sm text-gray-400">
+                💡 Tip: Solicita acceso al curso al administrador
+              </p>
+              <a 
+                href="/contacto"
+                class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors inline-block"
+              >
+                📧 Contactar Administrador
+              </a>
+            </div>
+          ` : `
+            <a 
+              href="/login?redirect=/cursos/${courseId}"
+              class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-block"
+            >
+              🔑 Iniciar Sesión
+            </a>
+          `;
+        }
+      }
+      
+      lessonTextContent.innerHTML = `
+        <div class="flex items-center justify-center h-full text-center px-4">
+          <div class="max-w-md">
+            <div class="text-6xl mb-4">${errorIcon}</div>
+            <h3 class="text-xl font-bold text-white mb-3">${errorTitle}</h3>
+            <p class="text-gray-300 mb-6">${errorMessage}</p>
+            ${showRetryButton ? `
+              <button 
+                onclick="openLesson(${lessonId}, '${lessonTitle}', ${isFree})"
+                class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                🔄 Intentar de nuevo
+              </button>
+            ` : actionButton}
           </div>
         </div>
       `;

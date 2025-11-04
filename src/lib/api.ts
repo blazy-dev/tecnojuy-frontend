@@ -21,7 +21,9 @@ class ApiClient {
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Network error' }));
-      throw new Error(errorData.detail || `HTTP ${response.status}`);
+      const error: any = new Error(errorData.detail || `HTTP ${response.status}`);
+      error.status = response.status; // Agregar código de estado al error
+      throw error;
     }
     
     return response.json();
