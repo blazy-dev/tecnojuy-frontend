@@ -126,10 +126,14 @@ const navItems = [
         credentials: 'include'
       });
       
+      console.log('[Navbar] Response status:', response.status, response.ok);
+      
       const sessionData = await response.json().catch(() => ({}));
+      console.log('[Navbar] Session data:', JSON.stringify(sessionData, null, 2));
+      
       const isAuthenticated = sessionData.authenticated && sessionData.user;
       
-      console.log('[Navbar] Auth check result:', { isAuthenticated, sessionData });
+      console.log('[Navbar] Auth check result:', { isAuthenticated, hasUser: !!sessionData.user, authenticated: sessionData.authenticated });
       
       // Show links only if authenticated
       if (isAuthenticated) {
