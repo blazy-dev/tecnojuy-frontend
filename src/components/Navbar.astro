@@ -5,11 +5,11 @@ import SimpleThemeToggle from '@/components/SimpleThemeToggle';
 const currentPath = Astro.url.pathname;
 
 const navItems = [
-  { name: 'Inicio', href: '/', icon: 'home' },
-  { name: 'Blog', href: '/blog', icon: 'newspaper' },
-  { name: 'Cursos', href: '/cursos', icon: 'academic-cap' },
-  { name: 'Mis Cursos', href: '/mis-cursos', icon: 'book-open' },
-  { name: 'Contacto', href: '/contacto', icon: 'envelope' }
+  { name: 'Inicio', href: '/', icon: 'home', authOnly: false },
+  { name: 'Blog', href: '/blog', icon: 'newspaper', authOnly: false },
+  { name: 'Cursos', href: '/cursos', icon: 'academic-cap', authOnly: false },
+  { name: 'Mis Cursos', href: '/mis-cursos', icon: 'book-open', authOnly: true },
+  { name: 'Contacto', href: '/contacto', icon: 'envelope', authOnly: false }
 ];
 ---
 
@@ -33,6 +33,7 @@ const navItems = [
           {navItems.map((item) => (
             <a
               href={item.href}
+              data-auth-only={item.authOnly ? 'true' : 'false'}
               class={currentPath === item.href 
                 ? 'px-3 py-2 rounded-md text-sm font-medium text-cyan-600 dark:text-brand-green bg-cyan-50 dark:bg-brand-green/20 border border-cyan-200 dark:border-brand-green' 
                 : 'px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-brand-blue hover:text-cyan-600 dark:hover:text-brand-green hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors'
@@ -75,6 +76,7 @@ const navItems = [
       {navItems.map((item) => (
         <a
           href={item.href}
+          data-auth-only={item.authOnly ? 'true' : 'false'}
           class={currentPath === item.href 
             ? 'block px-3 py-2 rounded-md text-base font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' 
             : 'block px-3 py-2 rounded-md text-base font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -107,6 +109,47 @@ const navItems = [
       mobileMenuButton.setAttribute('aria-expanded', 'false');
     }
   });
+
+  // Hide auth-only navigation items if user is not logged in
+  function updateAuthOnlyLinks() {
+    // Check if user is logged in by checking session cookie or making API call
+    const checkAuth = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.PUBLIC_API_URL || 'http://localhost:8000'}/auth/me`, {
+          credentials: 'include'
+        });
+        
+        const isAuthenticated = response.ok;
+        
+        // Get all links with data-auth-only="true"
+        const authOnlyLinks = document.querySelectorAll('[data-auth-only="true"]');
+        
+        authOnlyLinks.forEach(link => {
+          if (!isAuthenticated) {
+            // Hide the link if user is not authenticated
+            link.style.display = 'none';
+          } else {
+            // Show the link if user is authenticated
+            link.style.display = '';
+          }
+        });
+      } catch (error) {
+        // If there's an error checking auth, hide auth-only links
+        const authOnlyLinks = document.querySelectorAll('[data-auth-only="true"]');
+        authOnlyLinks.forEach(link => {
+          link.style.display = 'none';
+        });
+      }
+    };
+
+    checkAuth();
+  }
+
+  // Run on page load
+  updateAuthOnlyLinks();
+
+  // Listen for auth state changes (when user logs in/out)
+  window.addEventListener('auth-state-changed', updateAuthOnlyLinks);
 </script>
 
 <style>

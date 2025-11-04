@@ -39,6 +39,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.clear();
       sessionStorage.clear();
       
+      // Notificar a otros componentes del cambio de estado de autenticación
+      window.dispatchEvent(new Event('auth-state-changed'));
+      
       // Forzar recarga completa para limpiar cualquier estado residual
       window.location.href = '/';
     } catch (error) {
@@ -49,6 +52,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.removeItem('refresh_token');
       localStorage.clear();
       sessionStorage.clear();
+      
+      // Notificar a otros componentes del cambio de estado de autenticación
+      window.dispatchEvent(new Event('auth-state-changed'));
+      
       window.location.href = '/';
     }
   };
@@ -93,6 +100,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const userData = await api.getCurrentUser();
           setUser(userData);
           log('Legacy /auth/me success');
+          // Notificar a otros componentes del cambio de estado de autenticación
+          window.dispatchEvent(new Event('auth-state-changed'));
         } catch (primaryErr: any) {
           log('Legacy /auth/me failed:', primaryErr?.message);
           // Limpiar tokens inválidos
@@ -107,6 +116,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (sessionData.authenticated && sessionData.user) {
         setUser(sessionData.user);
         log('Session OK as', sessionData.user.email);
+        // Notificar a otros componentes del cambio de estado de autenticación
+        window.dispatchEvent(new Event('auth-state-changed'));
       } else {
         log('Session reports anonymous');
         // Si tenemos token pero el servidor dice que no estamos autenticados, limpiar tokens
