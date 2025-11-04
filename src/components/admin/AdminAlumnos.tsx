@@ -36,10 +36,10 @@ function AdminAlumnosContent() {
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Estados para paginación y filtros (TODO en el cliente)
+  // Nuevos estados para paginación y filtros
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalStudents, setTotalStudents] = useState(0);
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<number | null>(null);
-  const [studentsWithCourses, setStudentsWithCourses] = useState<Map<number, number[]>>(new Map());
   const studentsPerPage = 20;
 
   // Verificar que sea admin
@@ -60,34 +60,39 @@ function AdminAlumnosContent() {
   useEffect(() => {
     loadStudents();
     loadCourses();
-  }, []); // Cargar UNA SOLA VEZ
+  }, [selectedCourseFilter]); // Solo recargar cuando cambie el filtro
 
   const loadStudents = async () => {
     try {
       setLoadingStudents(true);
       
-      // Cargar TODOS los alumnos
-      const allUsers = await api.getUsers({ role_name: 'alumno', limit: 1000 });
-      setStudents(allUsers);
-      
-      // Cargar los cursos de cada alumno para el filtro
-      const coursesMap = new Map<number, number[]>();
-      for (const student of allUsers) {
-        try {
-          const userCoursesData = await api.getUserCoursesWithAccess(student.id);
-          const accessibleCourseIds = userCoursesData
-            .filter((c: Course) => c.has_access)
-            .map((c: Course) => c.id);
-          coursesMap.set(student.id, accessibleCourseIds);
-        } catch (error) {
-          console.error(`Error cargando cursos del alumno ${student.id}:`, error);
-          coursesMap.set(student.id, []);
-        }
+      // Si hay filtro de curso, usar endpoint con paginación
+      if (selectedCourseFilter) {
+        const skip = (currentPage - 1) * studentsPerPage;
+        const response = await api.getUsersPaginated({
+          skip,
+          limit: studentsPerPage,
+          role_name: 'alumno',
+          course_id: selectedCourseFilter
+        });
+        setStudents(response.users);
+        setTotalStudents(response.total);
+      } else {
+        // Sin filtro, cargar todos los alumnos (endpoint antiguo)
+        const allUsers = await api.getUsers({ role_name: 'alumno', limit: 1000 });
+        setStudents(allUsers);
+        setTotalStudents(allUsers.length);
       }
-      setStudentsWithCourses(coursesMap);
-      
     } catch (error) {
       console.error('Error cargando alumnos:', error);
+      // Fallback: intentar con endpoint antiguo
+      try {
+        const allUsers = await api.getUsers({ role_name: 'alumno', limit: 1000 });
+        setStudents(allUsers);
+        setTotalStudents(allUsers.length);
+      } catch (fallbackError) {
+        console.error('Error en fallback:', fallbackError);
+      }
     } finally {
       setLoadingStudents(false);
     }
@@ -218,7 +223,7 @@ function AdminAlumnosContent() {
     );
   }
   
-  // 1. Filtrar por búsqueda local (nombre o email)
+  // Filtrar por búsqueda local (nombre o email)
   let filteredAlumnos = students.filter(student => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
@@ -228,26 +233,20 @@ function AdminAlumnosContent() {
     );
   });
   
-  // 2. Filtrar por curso (si hay filtro seleccionado)
-  if (selectedCourseFilter) {
-    filteredAlumnos = filteredAlumnos.filter(student => {
-      const studentCourses = studentsWithCourses.get(student.id) || [];
-      return studentCourses.includes(selectedCourseFilter);
-    });
+  // Si NO hay filtro de curso, hacer paginación manual en el frontend
+  let paginatedAlumnos = filteredAlumnos;
+  let totalPages = 1;
+  
+  if (!selectedCourseFilter) {
+    totalPages = Math.ceil(filteredAlumnos.length / studentsPerPage);
+    const startIndex = (currentPage - 1) * studentsPerPage;
+    const endIndex = startIndex + studentsPerPage;
+    paginatedAlumnos = filteredAlumnos.slice(startIndex, endIndex);
+  } else {
+    // Con filtro de curso, el backend ya paginó
+    paginatedAlumnos = filteredAlumnos;
+    totalPages = Math.ceil(totalStudents / studentsPerPage);
   }
-  
-  // 3. Calcular paginación
-  const totalFiltered = filteredAlumnos.length;
-  const totalPages = Math.ceil(totalFiltered / studentsPerPage);
-  const startIndex = (currentPage - 1) * studentsPerPage;
-  const endIndex = startIndex + studentsPerPage;
-  const paginatedAlumnos = filteredAlumnos.slice(startIndex, endIndex);
-  
-  // 4. Calcular estadísticas
-  const totalAlumnos = students.length;
-  const alumnosConPremium = students.filter(s => s.has_premium_access).length;
-  const alumnosSinPremium = totalAlumnos - alumnosConPremium;
-  const alumnosFiltrados = totalFiltered;
   
   const premiumCount = students.filter(student => student.has_premium_access).length;
   
@@ -259,6 +258,11 @@ function AdminAlumnosContent() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Si hay filtro de curso, recargar datos del servidor
+    if (selectedCourseFilter) {
+      loadStudents();
+    }
   };
 
   return (
@@ -287,7 +291,7 @@ function AdminAlumnosContent() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
@@ -299,7 +303,7 @@ function AdminAlumnosContent() {
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Total Alumnos</dt>
-                    <dd className="text-lg font-medium text-gray-900">{totalAlumnos}</dd>
+                    <dd className="text-lg font-medium text-gray-900">{totalStudents}</dd>
                   </dl>
                 </div>
               </div>
@@ -317,7 +321,7 @@ function AdminAlumnosContent() {
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Con Acceso Premium</dt>
-                    <dd className="text-lg font-medium text-gray-900">{alumnosConPremium}</dd>
+                    <dd className="text-lg font-medium text-gray-900">{premiumCount}</dd>
                   </dl>
                 </div>
               </div>
@@ -335,25 +339,7 @@ function AdminAlumnosContent() {
                 <div className="ml-5 w-0 flex-1">
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Sin Acceso</dt>
-                    <dd className="text-lg font-medium text-gray-900">{alumnosSinPremium}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Filtrados</dt>
-                    <dd className="text-lg font-medium text-gray-900">{alumnosFiltrados}</dd>
+                    <dd className="text-lg font-medium text-gray-900">{totalStudents - premiumCount}</dd>
                   </dl>
                 </div>
               </div>
@@ -548,7 +534,7 @@ function AdminAlumnosContent() {
                     <span className="font-medium">
                       {Math.min(currentPage * studentsPerPage, totalStudents)}
                     </span>{' '}
-                    de <span className="font-medium">{alumnosFiltrados}</span> resultados
+                    de <span className="font-medium">{totalStudents}</span> resultados
                   </p>
                 </div>
                 <div>
@@ -565,7 +551,7 @@ function AdminAlumnosContent() {
                     </button>
                     
                     {/* Números de página */}
-                    {totalPages > 0 && Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
                       if (totalPages <= 5) {
                         pageNum = i + 1;
@@ -594,7 +580,7 @@ function AdminAlumnosContent() {
                     
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages || totalPages === 0}
+                      disabled={currentPage === totalPages}
                       className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <span className="sr-only">Siguiente</span>
