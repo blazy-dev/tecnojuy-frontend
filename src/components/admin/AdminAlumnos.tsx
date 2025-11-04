@@ -69,11 +69,13 @@ function AdminAlumnosContent() {
       // Si hay filtro de curso, usar endpoint con paginación
       if (selectedCourseFilter) {
         const skip = (currentPage - 1) * studentsPerPage;
-        const response = await api.getUsersPaginated({
+        const response = await api.getUsersAdminPaginated({
           skip,
           limit: studentsPerPage,
           role_name: 'alumno',
-          course_id: selectedCourseFilter
+          is_active: true,
+          course_id: selectedCourseFilter,
+          has_access: true
         });
         setStudents(response.users);
         setTotalStudents(response.total);

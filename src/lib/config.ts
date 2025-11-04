@@ -19,7 +19,8 @@ export const config = {
       profile: '/users/me',
       list: '/users/',
       roles: '/users/roles',
-      adminStats: '/users/admin/stats/'
+      adminStats: '/users/admin/stats/',
+      adminList: '/users/admin/list/'
     },
     posts: {
       list: '/posts/',

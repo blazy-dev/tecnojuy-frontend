@@ -97,6 +97,31 @@ class ApiClient {
     return this.handleResponse<AuthUser[]>(response);
   }
 
+  async getUsersAdminPaginated(params?: {
+    skip?: number;
+    limit?: number;
+    role_name?: string;
+    is_active?: boolean;
+    course_id?: number;
+    has_access?: boolean;
+  }): Promise<{ users: AuthUser[]; total: number; skip: number; limit: number; has_more: boolean }> {
+    const searchParams = new URLSearchParams();
+    if (params?.skip !== undefined) searchParams.append('skip', params.skip.toString());
+    if (params?.limit !== undefined) searchParams.append('limit', params.limit.toString());
+    if (params?.role_name) searchParams.append('role_name', params.role_name);
+    if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
+    if (params?.course_id !== undefined) searchParams.append('course_id', params.course_id.toString());
+    if (params?.has_access !== undefined) searchParams.append('has_access', params.has_access.toString());
+
+    const endpoint = searchParams.toString() ? `${config.endpoints.users.adminList}?${searchParams}` : config.endpoints.users.adminList;
+    const response = await fetch(getApiUrl(endpoint), {
+      credentials: 'include',
+      headers: this.getHeaders()
+    });
+
+    return this.handleResponse<{ users: AuthUser[]; total: number; skip: number; limit: number; has_more: boolean }>(response);
+  }
+
   async getUsersPaginated(params?: { 
     skip?: number; 
     limit?: number; 
