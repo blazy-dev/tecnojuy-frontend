@@ -104,6 +104,7 @@ class ApiClient {
     is_active?: boolean;
     course_id?: number;
     has_access?: boolean;
+    order?: 'desc' | 'asc';
   }): Promise<{ users: AuthUser[]; total: number; skip: number; limit: number; has_more: boolean }> {
     const searchParams = new URLSearchParams();
     if (params?.skip !== undefined) searchParams.append('skip', params.skip.toString());
@@ -112,6 +113,7 @@ class ApiClient {
     if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
     if (params?.course_id !== undefined) searchParams.append('course_id', params.course_id.toString());
     if (params?.has_access !== undefined) searchParams.append('has_access', params.has_access.toString());
+    if (params?.order !== undefined) searchParams.append('order', params.order);
 
     const endpoint = searchParams.toString() ? `${config.endpoints.users.adminList}?${searchParams}` : config.endpoints.users.adminList;
     const response = await fetch(getApiUrl(endpoint), {

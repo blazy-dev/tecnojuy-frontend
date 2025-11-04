@@ -35,6 +35,7 @@ function AdminAlumnosContent() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // desc = más recientes
   
   // Nuevos estados para paginación y filtros
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,7 +61,7 @@ function AdminAlumnosContent() {
   useEffect(() => {
     loadStudents();
     loadCourses();
-  }, [selectedCourseFilter]); // Solo recargar cuando cambie el filtro
+  }, [selectedCourseFilter, sortOrder]); // recargar también al cambiar el orden
 
   const loadStudents = async () => {
     try {
@@ -75,15 +76,21 @@ function AdminAlumnosContent() {
           role_name: 'alumno',
           is_active: true,
           course_id: selectedCourseFilter,
-          has_access: true
+          has_access: true,
+          order: sortOrder
         });
         setStudents(response.users);
         setTotalStudents(response.total);
       } else {
         // Sin filtro, cargar todos los alumnos (endpoint antiguo)
         const allUsers = await api.getUsers({ role_name: 'alumno', limit: 1000 });
-        setStudents(allUsers);
-        setTotalStudents(allUsers.length);
+        const sorted = [...allUsers].sort((a, b) => {
+          const da = new Date(a.created_at).getTime();
+          const db = new Date(b.created_at).getTime();
+          return sortOrder === 'desc' ? db - da : da - db;
+        });
+        setStudents(sorted);
+        setTotalStudents(sorted.length);
       }
     } catch (error) {
       console.error('Error cargando alumnos:', error);
@@ -240,6 +247,12 @@ function AdminAlumnosContent() {
   let totalPages = 1;
   
   if (!selectedCourseFilter) {
+    // ordenar en cliente según sortOrder
+    filteredAlumnos = [...filteredAlumnos].sort((a, b) => {
+      const da = new Date(a.created_at).getTime();
+      const db = new Date(b.created_at).getTime();
+      return sortOrder === 'desc' ? db - da : da - db;
+    });
     totalPages = Math.ceil(filteredAlumnos.length / studentsPerPage);
     const startIndex = (currentPage - 1) * studentsPerPage;
     const endIndex = startIndex + studentsPerPage;
@@ -255,6 +268,25 @@ function AdminAlumnosContent() {
   const handleCourseFilterChange = (courseId: number | null) => {
     setSelectedCourseFilter(courseId);
     setCurrentPage(1); // Reset a la primera página cuando cambia el filtro
+  };
+  
+  const handleSortChange = (value: 'desc' | 'asc') => {
+    setSortOrder(value);
+    setCurrentPage(1);
+    if (selectedCourseFilter) {
+      // si el backend pagina, recargar
+      loadStudents();
+    } else {
+      // si es en cliente, reordenar sin refetch
+      setStudents(prev => {
+        const sorted = [...prev].sort((a, b) => {
+          const da = new Date(a.created_at).getTime();
+          const db = new Date(b.created_at).getTime();
+          return value === 'desc' ? db - da : da - db;
+        });
+        return sorted;
+      });
+    }
   };
   
   const handlePageChange = (page: number) => {
@@ -393,8 +425,8 @@ function AdminAlumnosContent() {
                 </div>
               </div>
               
-              {/* Filtro por curso */}
-              <div className="flex items-center gap-3">
+              {/* Filtro por curso y orden */}
+              <div className="flex items-center gap-3 flex-wrap">
                 <label className="text-sm font-medium text-gray-700">Filtrar por curso:</label>
                 <select
                   value={selectedCourseFilter || ''}
@@ -418,6 +450,18 @@ function AdminAlumnosContent() {
                     Limpiar filtro
                   </button>
                 )}
+
+                <div className="flex items-center gap-2 ml-auto">
+                  <label className="text-sm font-medium text-gray-700">Ordenar:</label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => handleSortChange(e.target.value as 'desc' | 'asc')}
+                    className="block w-full sm:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  >
+                    <option value="desc">Más recientes</option>
+                    <option value="asc">Más antiguos</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -532,11 +576,18 @@ function AdminAlumnosContent() {
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-gray-700">
-                    Mostrando <span className="font-medium">{(currentPage - 1) * studentsPerPage + 1}</span> a{' '}
-                    <span className="font-medium">
-                      {Math.min(currentPage * studentsPerPage, totalStudents)}
-                    </span>{' '}
-                    de <span className="font-medium">{totalStudents}</span> resultados
+                    {(() => {
+                      const resultsTotal = selectedCourseFilter ? totalStudents : filteredAlumnos.length;
+                      const start = resultsTotal === 0 ? 0 : (currentPage - 1) * studentsPerPage + 1;
+                      const end = Math.min(currentPage * studentsPerPage, resultsTotal);
+                      return (
+                        <>
+                          Mostrando <span className="font-medium">{start}</span> a{' '}
+                          <span className="font-medium">{end}</span>{' '}
+                          de <span className="font-medium">{resultsTotal}</span> resultados
+                        </>
+                      );
+                    })()}
                   </p>
                 </div>
                 <div>
