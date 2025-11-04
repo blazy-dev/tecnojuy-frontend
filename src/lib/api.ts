@@ -97,6 +97,29 @@ class ApiClient {
     return this.handleResponse<AuthUser[]>(response);
   }
 
+  async getUsersPaginated(params?: { 
+    skip?: number; 
+    limit?: number; 
+    role_name?: string; 
+    is_active?: boolean;
+    course_id?: number;
+  }): Promise<{ users: AuthUser[]; total: number; skip: number; limit: number; has_more: boolean }> {
+    const searchParams = new URLSearchParams();
+    if (params?.skip !== undefined) searchParams.append('skip', params.skip.toString());
+    if (params?.limit !== undefined) searchParams.append('limit', params.limit.toString());
+    if (params?.role_name) searchParams.append('role_name', params.role_name);
+    if (params?.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
+    if (params?.course_id) searchParams.append('course_id', params.course_id.toString());
+    
+    const endpoint = searchParams.toString() ? `${config.endpoints.users.list}?${searchParams}` : config.endpoints.users.list;
+    const response = await fetch(getApiUrl(endpoint), {
+      credentials: 'include',
+      headers: this.getHeaders()
+    });
+    
+    return this.handleResponse<{ users: AuthUser[]; total: number; skip: number; limit: number; has_more: boolean }>(response);
+  }
+
   async getRoles(): Promise<Role[]> {
     const response = await fetch(getApiUrl(config.endpoints.users.roles), {
       credentials: 'include',
